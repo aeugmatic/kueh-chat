@@ -109,7 +109,7 @@ function addEmotes(msgText, msgData) {
 
     // Create `img` element string for each emote, and replace each instance of emote text with it
     for (let emote of msgData.emotes) {
-        let emoteImg = `<img class="emote" src="${emote["urls"]["4"]}"/>`;
+        let emoteImg = `<img class="emote" src="${emote["urls"]["4"]}" />`;
         msgText.innerHTML = msgText.innerHTML.replace(emote["name"], emoteImg);
     }
 }
