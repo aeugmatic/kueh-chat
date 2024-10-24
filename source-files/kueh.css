@@ -14,13 +14,13 @@ body {
 
 p {
 	display: inline-block;
-  	margin: 0;
-   	vertical-align: middle;
+	margin: 0;
+	vertical-align: middle;
 }
 
 .msgDiv {
 	display: inline-block;
-  	position: absolute;
+	position: absolute;
  	white-space: nowrap;
 }
 
@@ -29,31 +29,31 @@ p {
 }
 
 .msgBody {
-  	color: #fff;
+	color: #fff;
 	display: inline-block;
 }
 
 .badge {
 	display: inline-block;
-  	margin-right: 0.1em;
-   	vertical-align: middle;
+	margin-right: 0.1em;
+	vertical-align: middle;
 }
 
 .main-container {
-    display: inline-block;
+	display: inline-block;
 	font-family: "Nunito", sans-serif;
 	font-weight: 600;
-  	text-shadow: 3px 3px 2px #333;
-  	-webkit-text-stroke: 0.03em #000;
+	text-shadow: 3px 3px 2px #333;
+	-webkit-text-stroke: 0.03em #000;
 	paint-order: stroke fill;
 }
 
 @keyframes slide-in {
-  from {
-    left: 100vw;
-  }
+	from {
+		left: 100vw;
+	}
 
-  to {
-    left: -500vw;
-  }
+	to {
+		left: -500vw;
+	}
 }
