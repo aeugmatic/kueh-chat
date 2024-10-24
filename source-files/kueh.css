@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Arima:wght@100..700&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+
+* {
+	box-sizing: border-box;
+}
+
+html {
+	overflow: hidden;
+}
+
+body {
+	font-size: 7vh;
+}
+
+p {
+	display: inline-block;
+  	margin: 0;
+   	vertical-align: middle;
+}
+
+.msgDiv {
+	display: inline-block;
+  	position: absolute;
+ 	white-space: nowrap;
+}
+
+.username {
+	display: inline-block;
+}
+
+.msgBody {
+  	color: #fff;
+	display: inline-block;
+}
+
+.badge {
+	display: inline-block;
+  	margin-right: 0.1em;
+   	vertical-align: middle;
+}
+
+.main-container {
+    display: inline-block;
+	font-family: "Nunito", sans-serif;
+	font-weight: 600;
+  	text-shadow: 3px 3px 2px #333;
+  	-webkit-text-stroke: 0.03em #000;
+	paint-order: stroke fill;
+}
+
+@keyframes slide-in {
+  from {
+    left: 100vw;
+  }
+
+  to {
+    left: -500vw;
+  }
+}
