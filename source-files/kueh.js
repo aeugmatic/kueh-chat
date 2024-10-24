@@ -1,6 +1,6 @@
 /*
     TODO:
-    - ! Allow user to
+    - ! Allow user to enable (or even specify) easing in / out options
     - Buffer messages to prevent lag (and potentially overlapping)
     - Use a better parallax algorithm / formula
     - Consider using a more "consistent" method for adding images to text (since badge and emote adding functions do it differently)
