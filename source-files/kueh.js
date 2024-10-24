@@ -84,6 +84,7 @@ function setMessageHeight(div) {
 }
 
 function addUserBadges(div, msgData) {
+    // Check if there exist badges to add
     if (!msgData.badges) return;
 
     // Create `img` element for each user badge and append to beginning of username div
@@ -98,7 +99,14 @@ function addUserBadges(div, msgData) {
 }
 
 function addEmotes(div, msgData) {
+    // Check if there exist emotes to add
+    if (!msgData.emotes) return;
 
+    // Insert `img` HTML code for each emote within the inner HTML for the body
+    for (let emote of msgData.emotes) {
+        let emoteImg = `<img src="${emote["url"]["4"]}"/>`;
+        div.innerText.replace(emote["name"], emoteImg)
+    }
 }
 
 function escapeText(text) {
