@@ -1,7 +1,10 @@
 /*
-    CONSIDERATIONS:
+    TODO:
+    - ! Allow user to
     - Buffer messages to prevent lag (and potentially overlapping)
     - Use a better parallax algorithm / formula
+    - Consider using a more "consistent" method for adding images to text (since badge and emote adding functions do it differently)
+    - Flesh out the `escapeText` function / XSS prevention further
 */
 
 window.addEventListener("onEventReceived", (obj) => {
