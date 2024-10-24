@@ -55,12 +55,12 @@ p {
 	paint-order: stroke fill;
 }
 
-@keyframes slide-in {
-	from {
-		left: 100vw;
-	}
+@keyframes appear-ease {
+    from { left: 100vw; }
+    to { left: 80vw; }
+}
 
-	to {
-		left: -300vw;
-	}
+@keyframes right-to-left {
+    from { left: 80vw; }
+    to {left: -300vw; }
 }
