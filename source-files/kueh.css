@@ -37,6 +37,7 @@ p {
 	display: inline-block;
 	margin-right: 0.1em;
 	vertical-align: middle;
+    height: 1em;
 }
 
 .main-container {

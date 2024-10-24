@@ -1,3 +1,9 @@
+/*
+    CONSIDERATIONS:
+    - Buffer messages to prevent lag (and potentially overlapping)
+    - Use a better parallax algorithm / formula
+*/
+
 window.addEventListener("onEventReceived", (obj) => {
     // Check if the object received is a chat message (or if it has the checkable properties at all, hence '?.')
     if (obj?.detail?.listener?.toUpperCase() !== "MESSAGE") return;
@@ -92,7 +98,6 @@ function addUserBadges(div, msgData) {
         let badgeImg = document.createElement("img");
         badgeImg.src = badge["url"];
 		badgeImg.className = "badge";
-        badgeImg.style.height = "1em";
 
         div.appendChild(badgeImg);
     }
@@ -102,10 +107,11 @@ function addEmotes(div, msgData) {
     // Check if there exist emotes to add
     if (!msgData.emotes) return;
 
-    // Insert `img` HTML code for each emote within the inner HTML for the body
+    // Create `img` element for each emote
     for (let emote of msgData.emotes) {
-        let emoteImg = `<img src="${emote["url"]["4"]}"/>`;
-        div.innerText.replace(emote["name"], emoteImg)
+        let emoteImg = document.createElement("img");
+        emoteImg.src = emote["urls"]["4"];
+        emoteImg.className = "emote";
     }
 }
 
