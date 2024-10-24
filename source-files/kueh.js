@@ -99,7 +99,7 @@ function addUserBadges(div, msgData) {
     // Create `img` element for each user badge and append to beginning of username div
     for (let badge of msgData.badges) {
         let badgeImg = document.createElement("img");
-        badgeImg.src = badge["url"];
+        badgeImg.src = badge.url;
 		badgeImg.className = "badge";
 
         div.appendChild(badgeImg);
@@ -112,8 +112,8 @@ function addEmotes(msgText, msgData) {
 
     // Create `img` element string for each emote, and replace each instance of emote text with it
     for (let emote of msgData.emotes) {
-        let emoteImg = `<img class="emote" src="${emote["urls"]["4"]}" />`;
-        msgText.innerHTML = msgText.innerHTML.replace(emote["name"], emoteImg);
+        let emoteImg = `<img class="emote" src="${emote.urls["4"]}" />`;
+        msgText.innerHTML = msgText.innerHTML.replace(emote.name, emoteImg);
     }
 }
 
