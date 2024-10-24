@@ -59,12 +59,12 @@ function createMsgBodyDiv(msgData) {
     let div = document.createElement("div");
     div.className = "msgBody";
 
-    addEmotes(div, msgData); // Add emotes to the message body
-
-    // Append message body to div
     let msgBody = document.createElement("p");
     msgBody.innerText = `: ${escapeText(msgData.text)}`;
-    div.appendChild(msgBody);
+
+    addEmotes(div, msgData); // Add emotes to the message body after setting the inner text
+
+    div.appendChild(msgBody); // Append message text with emotes inserted to the div
 
     return div;
 }
@@ -98,6 +98,7 @@ function addUserBadges(div, msgData) {
 }
 
 function addEmotes(div, msgData) {
+
 }
 
 function escapeText(text) {
