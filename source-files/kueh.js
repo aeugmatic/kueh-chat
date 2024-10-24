@@ -9,7 +9,7 @@ window.addEventListener("onEventReceived", (obj) => {
     if (obj?.detail?.listener?.toUpperCase() !== "MESSAGE") return;
     
     // Create variable to hold data object for less cumbersome reference
-    let msgData = obj.detail.event.data;
+    const msgData = obj.detail.event.data;
 
     // Create the message div with all its styles and properties
     let msgDiv = createMessageDiv(msgData);
@@ -65,12 +65,12 @@ function createMsgBodyDiv(msgData) {
     let div = document.createElement("div");
     div.className = "msgBody";
 
-    let msgBody = document.createElement("p");
-    msgBody.innerText = `: ${escapeText(msgData.text)}`;
+    let msgText = document.createElement("p");
+    msgText.innerHTML = `: ${escapeText(msgData.text)}`;
 
-    addEmotes(div, msgData); // Add emotes to the message body after setting the inner text
+    addEmotes(msgText, msgData); // Add emotes to the message body after setting the inner text
 
-    div.appendChild(msgBody); // Append message text with emotes inserted to the div
+    div.appendChild(msgText); // Append message text with emotes inserted to the div
 
     return div;
 }
@@ -103,15 +103,14 @@ function addUserBadges(div, msgData) {
     }
 }
 
-function addEmotes(div, msgData) {
+function addEmotes(msgText, msgData) {
     // Check if there exist emotes to add
     if (!msgData.emotes) return;
 
-    // Create `img` element for each emote
+    // Create `img` element string for each emote, and replace each instance of emote text with it
     for (let emote of msgData.emotes) {
-        let emoteImg = document.createElement("img");
-        emoteImg.src = emote["urls"]["4"];
-        emoteImg.className = "emote";
+        let emoteImg = `<img class="emote" src="${emote["urls"]["4"]}"/>`;
+        msgText.innerHTML = msgText.innerHTML.replace(emote["name"], emoteImg);
     }
 }
 

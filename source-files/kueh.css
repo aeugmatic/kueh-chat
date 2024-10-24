@@ -40,6 +40,12 @@ p {
 	height: 1em;
 }
 
+.emote {
+	display: inline-block;
+	vertical-align: middle;
+	height: 1em;
+}
+
 .main-container {
 	display: inline-block;
 	font-family: "Nunito", sans-serif;
