@@ -82,8 +82,8 @@ function createMsgBodyDiv(msgData) {
 }
 
 function setAnimation(div) {
-    const size = randomSize(0.45, 1);      // Generate random size value for parallax effect
-    const time = 20 / Math.pow(size, 0.5); // Adjust time (i.e speed) value according to random size value
+    const size = randomSize({{MinScaleFactor}}, 1);      // Generate random size value for parallax effect
+    const time = 20 / Math.pow(size, {{MinScaleFactor}}); // Adjust time (i.e speed) value according to random size value
 
     div.style.fontSize = `${size}em`;
 	div.style.animation = `appear-ease 0.5s cubic-bezier(.24,.59,.33,.67) forwards, right-to-left ${time}s linear 0.5s forwards`;
