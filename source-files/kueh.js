@@ -13,25 +13,29 @@
 */
 
 // Declare variables to hold relevant JSON field data
-let minScaleFactor, hiddenAccs;
+let minScaleFactor, hiddenAccs, hideCommands;
 
 // Initialise JSON field data variables
 window.addEventListener("onWidgetLoad", (obj) => {
     const fieldData = obj.detail.fieldData;
 
     minScaleFactor = fieldData.MinScaleFactor;
-    hiddenAccs = fieldData.HiddenAccounts?.split(",");
+    hiddenAccs = fieldData.HiddenAccounts?.split(/,\s|,/g);
+    hideCommands = fieldData.HideCommands;
 });
 
 window.addEventListener("onEventReceived", (obj) => {
     // Check if the object received is a chat message (or if it has the checkable properties at all, hence '?.')
     if (obj?.detail?.listener?.toUpperCase() !== "MESSAGE") return;
-    
+
     // Create variable to hold data object for less cumbersome reference
     const msgData = obj.detail.event.data;
 
     // Check if message sender is in hidden accounts list (given that the array isn't undefined), don't show their message
     if (hiddenAccs?.includes(msgData.displayName)) return;
+
+    // Check if message contains a command prefixed with '!'
+    if (hideCommands && msgData.text[0] === "!") return;
 
     // Create the message div with all its styles and properties
     let msgDiv = createMessageDiv(msgData);
