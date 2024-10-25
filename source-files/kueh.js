@@ -189,7 +189,11 @@ function handleOutline(div) {
 
     // If text outline enabled, add "outline" shadow
     if (enableOutline) {
-        shadow += ", " + `
+        // If handleShadow didn't return an empty string (falsey)
+        if (shadow) shadow += ", ";
+
+        // "Outline" shadow styling
+        shadow += `
         -${outlineThickness}px -${outlineThickness}px 0 ${outlineColor}, 
          0                     -${outlineThickness}px 0 ${outlineColor}, 
          ${outlineThickness}px -${outlineThickness}px 0 ${outlineColor}, 
