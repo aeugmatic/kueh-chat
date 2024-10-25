@@ -207,6 +207,7 @@ function handleShadow() {
     if (enableTextDropShadow) {
         return `3px 3px 3px ${textShadowColor}`
     }
+    return "";
 }
 
 function calcParallaxTime(size) {
