@@ -40,6 +40,13 @@
 
         "group": "Whole Message Appearance"
     },
+    "EnableOutline": {
+        "type": "checkbox",
+        "label": "Enable text outline",
+        "value": true,
+
+        "group": "Message Body Appearance"
+    },
     "OutlineColor": {
         "type": "colorpicker",
         "label": "Color of the text outline",
