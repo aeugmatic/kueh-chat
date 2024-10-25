@@ -8,7 +8,20 @@
     - Consider potentially deleting message divs once they disappear off-screen, if allowing them to remain affects performance
     - Consider how to deal with text outline a bit more (just leave the colour up to the user?)
     - Better handle message height-handling, because I think some messages still appear off-screen (at the bottom, at least)
+    - Possibly implement "deflection" physics? Make messages "deflect" each other within a certain radius so that they don't overlap and are easier to read
+    - Make messages invisible after animations end to ensure they dont show up, even if offscreen distance is too short 
 */
+
+// Declare variables to hold relevant JSON field data
+let minScaleFactor, hiddenAccs;
+
+// Initialise JSON field data variables
+window.addEventListener("onWidgetLoad", (obj) => {
+    const fieldData = obj.detail.fieldData;
+
+    minScaleFactor = fieldData.MinScaleFactor;
+    hiddenAccs = fieldData.HiddenAccounts?.split(",");
+});
 
 window.addEventListener("onEventReceived", (obj) => {
     // Check if the object received is a chat message (or if it has the checkable properties at all, hence '?.')
@@ -16,6 +29,9 @@ window.addEventListener("onEventReceived", (obj) => {
     
     // Create variable to hold data object for less cumbersome reference
     const msgData = obj.detail.event.data;
+
+    // Check if message sender is in hidden accounts list (given that the array isn't undefined), don't show their message
+    if (hiddenAccs?.includes(msgData.displayName)) return;
 
     // Create the message div with all its styles and properties
     let msgDiv = createMessageDiv(msgData);
@@ -56,7 +72,7 @@ function createUsernameDiv(msgData) {
     addUserBadges(div, msgData); // Add badges the user has
 
     // Check if user color has been set - if display color is `undefined` then first non-falsy value is returned
-    div.style.color = msgData.displayColor || "#FFFFFF";
+    div.style.color = msgData.displayColor ?? "#FFFFFF";
 
     // Append username text to div
     let username = document.createElement("p");
@@ -82,8 +98,8 @@ function createMsgBodyDiv(msgData) {
 }
 
 function setAnimation(div) {
-    const size = randomSize({{MinScaleFactor}}, 1);      // Generate random size value for parallax effect
-    const time = 20 / Math.pow(size, {{MinScaleFactor}}); // Adjust time (i.e speed) value according to random size value
+    const size = randomSize(minScaleFactor, 1);      // Generate random size value for parallax effect
+    const time = 20 / Math.pow(size, minScaleFactor); // Adjust time (i.e speed) value according to random size value
 
     div.style.fontSize = `${size}em`;
 	div.style.animation = `appear-ease 0.5s cubic-bezier(.24,.59,.33,.67) forwards, right-to-left ${time}s linear 0.5s forwards`;
