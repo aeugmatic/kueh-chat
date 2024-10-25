@@ -13,7 +13,7 @@
 */
 
 // Declare variables to hold relevant JSON field data
-let minScaleFactor, hiddenAccs, hideCommands, enableOutline, outlineColor;
+let minScaleFactor, hiddenAccs, hideCommands, enableOutline, outlineColor, outlineThickness;
 
 // Initialise JSON field data variables
 window.addEventListener("onWidgetLoad", (obj) => {
@@ -24,6 +24,7 @@ window.addEventListener("onWidgetLoad", (obj) => {
     hideCommands = fieldData.HideCommands;
     enableOutline = fieldData.EnableOutline;
     outlineColor = fieldData.OutlineColor;
+    outlineThickness = fieldData.OutlineThickness
 });
 
 window.addEventListener("onEventReceived", (obj) => {
@@ -163,14 +164,14 @@ function handleOutline(div) {
     // If text outline enabled, add "outline" shadow
     if (enableOutline) {
         shadow += ", " + `
-        -1px -1px  0 ${outlineColor}, 
-         0    -1px 0 ${outlineColor}, 
-         1px  -1px 0 ${outlineColor}, 
-         1px   0   0 ${outlineColor}, 
-         1px   1px 0 ${outlineColor}, 
-         0     1px 0 ${outlineColor}, 
-        -1px  1px  0 ${outlineColor}, 
-        -1px  0    0 ${outlineColor}`;
+        -${outlineThickness}px -${outlineThickness}px 0 ${outlineColor}, 
+         0                     -${outlineThickness}px 0 ${outlineColor}, 
+         ${outlineThickness}px -${outlineThickness}px 0 ${outlineColor}, 
+         ${outlineThickness}px  0                     0 ${outlineColor}, 
+         ${outlineThickness}px  ${outlineThickness}px 0 ${outlineColor}, 
+         0                      ${outlineThickness}px 0 ${outlineColor}, 
+        -${outlineThickness}px  ${outlineThickness}px 0 ${outlineColor}, 
+        -${outlineThickness}px  0                     0 ${outlineColor}`;
     }
 
     div.style.textShadow = shadow;

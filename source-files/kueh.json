@@ -54,6 +54,16 @@
 
         "group": "Whole Message Appearance"
     },
+    "OutlineThickness": {
+        "type": "number",
+        "label": "Thickness of the text outline (in pixels)",
+        "value": 1,
+        "min": 1,
+        "max": 5,
+        "step": 1,
+
+        "group": "Whole Message Appearance"
+    },
 
 
 
