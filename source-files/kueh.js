@@ -13,7 +13,7 @@
 */
 
 // Declare variables to hold relevant JSON field data
-let minScaleFactor, hiddenAccs, hideCommands;
+let minScaleFactor, hiddenAccs, hideCommands, enableOutline, outlineColor;
 
 // Initialise JSON field data variables
 window.addEventListener("onWidgetLoad", (obj) => {
@@ -22,6 +22,8 @@ window.addEventListener("onWidgetLoad", (obj) => {
     minScaleFactor = fieldData.MinScaleFactor;
     hiddenAccs = fieldData.HiddenAccounts?.split(/,\s|,/g);
     hideCommands = fieldData.HideCommands;
+    enableOutline = fieldData.EnableOutline;
+    outlineColor = fieldData.OutlineColor;
 });
 
 window.addEventListener("onEventReceived", (obj) => {
@@ -55,6 +57,7 @@ function createMessageDiv(msgData) {
     msgDiv.className = "msgDiv";                // Set class
     setAnimation(msgDiv);                       // Set animation + parallax effect
     setMessageHeight(msgDiv);                   // Set height randomly
+    handleOutline(msgDiv);                      // Handle rendering the outline of the message
 
     /* Message Username */
     let usernameDiv = createUsernameDiv(msgData); // Create the username div
@@ -102,7 +105,7 @@ function createMsgBodyDiv(msgData) {
 }
 
 function setAnimation(div) {
-    const size = randomSize(minScaleFactor, 1);      // Generate random size value for parallax effect
+    const size = randomSize(minScaleFactor, 1);       // Generate random size value for parallax effect
     const time = 20 / Math.pow(size, minScaleFactor); // Adjust time (i.e speed) value according to random size value
 
     div.style.fontSize = `${size}em`;
@@ -151,4 +154,24 @@ function escapeText(text) {
 
 function randomSize(minSize, maxSize) {
     return Math.random() * (maxSize - minSize) + minSize;
+}
+
+function handleOutline(div) {
+    // Initialise to include "actual" drop shadow for the text
+    let shadow = "3px 3px 3px #333";
+
+    // If text outline enabled, add "outline" shadow
+    if (enableOutline) {
+        shadow += ", " + `
+        -1px -1px  0 ${outlineColor}, 
+         0    -1px 0 ${outlineColor}, 
+         1px  -1px 0 ${outlineColor}, 
+         1px   0   0 ${outlineColor}, 
+         1px   1px 0 ${outlineColor}, 
+         0     1px 0 ${outlineColor}, 
+        -1px  1px  0 ${outlineColor}, 
+        -1px  0    0 ${outlineColor}`;
+    }
+
+    div.style.textShadow = shadow;
 }

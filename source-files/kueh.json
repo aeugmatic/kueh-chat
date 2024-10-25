@@ -35,7 +35,7 @@
     },
     "HideCommands": {
         "type": "checkbox",
-        "label": "Hide command messages (i.e. that use '!')",
+        "label": "Hide command messages (i.e. that begin with '!')",
         "value": true,
 
         "group": "Whole Message Appearance"
@@ -45,7 +45,7 @@
         "label": "Enable text outline",
         "value": true,
 
-        "group": "Message Body Appearance"
+        "group": "Whole Message Appearance"
     },
     "OutlineColor": {
         "type": "colorpicker",
