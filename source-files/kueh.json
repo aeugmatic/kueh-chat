@@ -78,7 +78,7 @@
     "UsernameFont": {
         "type": "text",
         "label": "Font name",
-        "value": "Arial",
+        "value": "Nunito",
         
         "group": "Username Appearance"
     },
