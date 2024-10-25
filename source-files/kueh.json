@@ -64,6 +64,20 @@
 
         "group": "Whole Message Appearance"
     },
+    "EnableTextDropShadow": {
+        "type": "checkbox",
+        "label": "Enable a drop shadow for the text",
+        "value": true,
+
+        "group": "Whole Message Appearance"
+    },
+    "TextShadowColor": {
+        "type": "colorpicker",
+        "label": "Color of the text drop shadow",
+        "value": "rgb(0,0,0)",
+
+        "group": "Whole Message Appearance"
+    },
 
 
 

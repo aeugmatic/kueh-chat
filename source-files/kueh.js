@@ -12,8 +12,24 @@
     - Make messages invisible after animations end to ensure they dont show up, even if offscreen distance is too short 
 */
 
-// Declare variables to hold relevant JSON field data
-let minScaleFactor, hiddenAccs, hideCommands, enableOutline, outlineColor, outlineThickness;
+
+
+/*  
+    ==========================================================
+        Declare variables to hold relevant JSON field data
+    ==========================================================
+*/
+
+// Whole Message Appearance
+let minScaleFactor, hiddenAccs, hideCommands, enableOutline, outlineColor, outlineThickness, enableTextDropShadow, textShadowColor;
+
+
+
+/*  
+    ==================
+        Event code
+    ==================
+*/  
 
 // Initialise JSON field data variables
 window.addEventListener("onWidgetLoad", (obj) => {
@@ -25,6 +41,8 @@ window.addEventListener("onWidgetLoad", (obj) => {
     enableOutline = fieldData.EnableOutline;
     outlineColor = fieldData.OutlineColor;
     outlineThickness = fieldData.OutlineThickness
+    enableTextDropShadow = fieldData.EnableTextDropShadow;
+    textShadowColor = fieldData.TextShadowColor;
 });
 
 window.addEventListener("onEventReceived", (obj) => {
@@ -49,6 +67,14 @@ window.addEventListener("onEventReceived", (obj) => {
     // Finally, attach the div to the widget
     document.querySelector(".main-container").appendChild(msgDiv);
 });
+
+
+
+/* 
+    ============================
+        Function definitions
+    ============================
+*/
 
 /* TODO: MAKE JSDOC */
 function createMessageDiv(msgData) {
@@ -159,7 +185,7 @@ function randomSize(minSize, maxSize) {
 
 function handleOutline(div) {
     // Initialise to include "actual" drop shadow for the text
-    let shadow = "3px 3px 3px #333";
+    let shadow = handleShadow();
 
     // If text outline enabled, add "outline" shadow
     if (enableOutline) {
@@ -175,6 +201,12 @@ function handleOutline(div) {
     }
 
     div.style.textShadow = shadow;
+}
+
+function handleShadow() {
+    if (enableTextDropShadow) {
+        return `3px 3px 3px ${textShadowColor}`
+    }
 }
 
 function calcParallaxTime(size) {
