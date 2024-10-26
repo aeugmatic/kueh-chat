@@ -9,7 +9,8 @@
     - Consider how to deal with text outline a bit more (just leave the colour up to the user?)
     - Better handle message height-handling, because I think some messages still appear off-screen (at the bottom, at least)
     - Possibly implement "deflection" physics? Make messages "deflect" each other within a certain radius so that they don't overlap and are easier to read
-    - Make messages invisible after animations end to ensure they dont show up, even if offscreen distance is too short 
+    - Make messages invisible after animations end to ensure they dont show up, even if offscreen distance is too short
+    - Modify the easing animations to account for different speeds so that it is more fluid
 */
 
 
@@ -57,6 +58,7 @@ window.addEventListener("onWidgetLoad", (obj) => {
 
     // Whole Message Behaviour
     parallaxAmount = fieldData.ParallaxAmount;
+    globalMsgSpeed = fieldData.GlobalMsgSpeed;
 
     // Username Appearance
 
@@ -234,5 +236,9 @@ function handleShadow() {
 }
 
 function calcParallaxTime(size, amount) {
-    return 20 / Math.pow(size, amount);
+    return calcMsgTravelTime() / Math.pow(size, minScaleFactor);
+}
+
+function calcMsgTravelTime() {
+    return window.innerWidth / globalMsgSpeed;
 }
