@@ -31,8 +31,9 @@ p {
 }
 
 .msgBody {
-	color: #fff;
+	color: {{BodyColor}};
 	display: inline-block;
+    font-family: {{BodyFont}};
 }
 
 .badge {
