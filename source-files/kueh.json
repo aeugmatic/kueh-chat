@@ -113,7 +113,7 @@
         
         "group": "Username Appearance"
     },
-    "ShowUserBadge": {
+    "ShowUserBadges": {
         "type": "checkbox",
         "label": "Show user badges",
         "value": true,

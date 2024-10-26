@@ -1,6 +1,7 @@
 /*
     TODO:
     - ! Allow user to enable (or even specify) easing in / out options
+    - ! Random chat colour option instead of default colour?
     - Buffer messages to prevent lag (and potentially overlapping)
     - Use a better parallax algorithm / formula
     - Consider using a more "consistent" method for adding images to text (since badge and emote adding functions do it differently)
@@ -11,6 +12,7 @@
     - Possibly implement "deflection" physics? Make messages "deflect" each other within a certain radius so that they don't overlap and are easier to read
     - Make messages invisible after animations end to ensure they dont show up, even if offscreen distance is too short
     - Modify the easing animations to account for different speeds so that it is more fluid
+    - Can the default username colour just be set in the CSS, and the JS just overrides it if a custom colour was set instead?
 */
 
 
@@ -28,7 +30,7 @@ let minScaleFactor, hiddenAccs, hideCommands, enableOutline, outlineColor, outli
 let parallaxAmount, globalMsgSpeed;
 
 // Username Appearance
-let defaultUsernameColor, usernameFont, showUserBadge;
+let defaultUsernameColor, usernameFont, showUserBadges;
 
 // Message Body Appearance
 let bodyColor, bodyFont, bodyCharLimit;
@@ -61,6 +63,8 @@ window.addEventListener("onWidgetLoad", (obj) => {
     globalMsgSpeed = fieldData.GlobalMsgSpeed;
 
     // Username Appearance
+    defaultUsernameColor = fieldData.DefaultUsernameColor;
+    showUserBadges = fieldData.ShowUserBadges;
 
     // Message Body Appearance
 
@@ -123,10 +127,11 @@ function createUsernameDiv(msgData) {
     let div = document.createElement("div");
     div.className = "username";
 
-    addUserBadges(div, msgData); // Add badges the user has
+    // Add badges the user has
+    if (showUserBadges) { addUserBadges(div, msgData); } 
 
     // Check if user color has been set - if display color is `undefined` then first non-falsy value is returned
-    div.style.color = msgData.displayColor ?? "#FFFFFF";
+    div.style.color = msgData.displayColor ?? defaultUsernameColor;
 
     // Append username text to div
     let username = document.createElement("p");
