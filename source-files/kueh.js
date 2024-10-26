@@ -23,6 +23,15 @@
 // Whole Message Appearance
 let minScaleFactor, hiddenAccs, hideCommands, enableOutline, outlineColor, outlineThickness, enableTextDropShadow, textShadowColor;
 
+// Whole Message Behaviour
+let parallaxAmount, globalMsgSpeed;
+
+// Username Appearance
+let defaultUsernameColor, usernameFont, showUserBadge;
+
+// Message Body Appearance
+let bodyColor, bodyFont, bodyCharLimit;
+
 
 
 /*  
@@ -33,8 +42,10 @@ let minScaleFactor, hiddenAccs, hideCommands, enableOutline, outlineColor, outli
 
 // Initialise JSON field data variables
 window.addEventListener("onWidgetLoad", (obj) => {
+    // Store field data object in conveniently-accessible variable
     const fieldData = obj.detail.fieldData;
 
+    // Whole Message Appearance
     minScaleFactor = fieldData.MinScaleFactor;
     hiddenAccs = fieldData.HiddenAccounts?.split(/,\s|,/g);
     hideCommands = fieldData.HideCommands;
@@ -43,6 +54,13 @@ window.addEventListener("onWidgetLoad", (obj) => {
     outlineThickness = fieldData.OutlineThickness
     enableTextDropShadow = fieldData.EnableTextDropShadow;
     textShadowColor = fieldData.TextShadowColor;
+
+    // Whole Message Behaviour
+
+    // Username Appearance
+
+    // Message Body Appearance
+    
 });
 
 window.addEventListener("onEventReceived", (obj) => {
