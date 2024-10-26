@@ -2,6 +2,7 @@
     TODO:
     - ! Allow user to enable (or even specify) easing in / out options
     - ! Random chat colour option instead of default colour?
+    - ! Add multiple options for what to do with messages that surpass char limit (e.g. dont show, truncate, etc.)
     - Buffer messages to prevent lag (and potentially overlapping)
     - Use a better parallax algorithm / formula
     - Consider using a more "consistent" method for adding images to text (since badge and emote adding functions do it differently)
@@ -33,7 +34,7 @@ let parallaxAmount, globalMsgSpeed;
 let defaultUsernameColor, showUserBadges;
 
 // Message Body Appearance
-let bodyColor, bodyFont, bodyCharLimit;
+let bodyCharLimit;
 
 
 
@@ -67,7 +68,7 @@ window.addEventListener("onWidgetLoad", (obj) => {
     showUserBadges = fieldData.ShowUserBadges;
 
     // Message Body Appearance
-
+    bodyCharLimit = fieldData.BodyCharLimit;
 });
 
 window.addEventListener("onEventReceived", (obj) => {
@@ -82,6 +83,9 @@ window.addEventListener("onEventReceived", (obj) => {
 
     // Check if message contains a command prefixed with '!'
     if (hideCommands && msgData.text[0] === "!") return;
+
+    // Don't show message if body surpasses char limit
+    if (msgData.text.length > bodyCharLimit) return;
 
     // Create the message div with all its styles and properties
     let msgDiv = createMessageDiv(msgData);
