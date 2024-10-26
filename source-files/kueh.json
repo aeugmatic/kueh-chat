@@ -84,7 +84,7 @@
     "ParallaxAmount": {
         "type": "number",
         "label": "Strength of the parallax effect (0 = no parallax)",
-        "value": 0.8,
+        "value": 0.6,
         "min": 0.0,
 
         "group": "Whole Message Behavior"

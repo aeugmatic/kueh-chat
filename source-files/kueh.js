@@ -56,11 +56,12 @@ window.addEventListener("onWidgetLoad", (obj) => {
     textShadowColor = fieldData.TextShadowColor;
 
     // Whole Message Behaviour
+    parallaxAmount = fieldData.ParallaxAmount;
 
     // Username Appearance
 
     // Message Body Appearance
-    
+
 });
 
 window.addEventListener("onEventReceived", (obj) => {
@@ -150,8 +151,8 @@ function createMsgBodyDiv(msgData) {
 }
 
 function setAnimation(div) {
-    const size = randomSize(minScaleFactor, 1); // Generate random size value for parallax effect
-    const time = calcParallaxTime(size);        // Adjust time (i.e speed) value according to random size value
+    const size = randomSize(minScaleFactor, 1);          // Generate random size value for parallax effect
+    const time = calcParallaxTime(size, parallaxAmount); // Adjust time (i.e speed) value according to random size value
 
     div.style.fontSize = `${size}em`;
 	div.style.animation = `appear-ease 0.5s cubic-bezier(.24,.59,.33,.67) forwards, right-to-left ${time}s linear 0.5s forwards`;
@@ -232,6 +233,6 @@ function handleShadow() {
     return "";
 }
 
-function calcParallaxTime(size) {
-    return 20 / Math.pow(size, minScaleFactor);
+function calcParallaxTime(size, amount) {
+    return 20 / Math.pow(size, amount);
 }
