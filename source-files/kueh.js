@@ -30,7 +30,7 @@ let minScaleFactor, hiddenAccs, hideCommands, enableOutline, outlineColor, outli
 let parallaxAmount, globalMsgSpeed;
 
 // Username Appearance
-let defaultUsernameColor, usernameFont, showUserBadges;
+let defaultUsernameColor, showUserBadges;
 
 // Message Body Appearance
 let bodyColor, bodyFont, bodyCharLimit;

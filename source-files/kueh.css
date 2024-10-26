@@ -27,6 +27,7 @@ p {
 
 .username {
 	display: inline-block;
+    font-family: {{UsernameFont}};
 }
 
 .msgBody {
@@ -49,7 +50,6 @@ p {
 
 .main-container {
 	display: inline-block;
-	font-family: "Nunito", sans-serif;
 	font-weight: 600;
 }
 
