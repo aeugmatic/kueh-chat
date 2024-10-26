@@ -82,11 +82,11 @@ window.addEventListener("onEventReceived", (obj) => {
     // Create the message div with all its styles and properties
     let msgDiv = createMessageDiv(msgData);
 
-    // Set the message at a random height
-    setMessageHeight(msgDiv);
-
-    // Finally, attach the div to the widget
+    // Attach the div to the widget
     document.querySelector(".main-container").appendChild(msgDiv);
+
+    // Finally, set the message at a random height (has to be done after div is rendered in the DOM)
+    setMessageHeight(msgDiv);
 });
 
 
@@ -104,7 +104,6 @@ function createMessageDiv(msgData) {
     let msgDiv = document.createElement("div"); // Create the main message div
     msgDiv.className = "msgDiv";                // Set class
     setAnimation(msgDiv);                       // Set animation + parallax effect
-    setMessageHeight(msgDiv);                   // Set height randomly
     handleOutline(msgDiv);                      // Handle rendering the outline of the message
 
     /* Message Username */
