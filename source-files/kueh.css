@@ -9,7 +9,7 @@ html {
 }
 
 body {
-	font-size: 7vh;
+	font-size: {{MsgFontSize}}vh;
 }
 
 p {
@@ -22,15 +22,18 @@ p {
 	display: inline-block;
 	position: absolute;
  	white-space: nowrap;
+    opacity: {{MsgOpactiy}};
 }
 
 .username {
 	display: inline-block;
+    font-family: {{UsernameFont}};
 }
 
 .msgBody {
-	color: #fff;
+	color: {{BodyColor}};
 	display: inline-block;
+    font-family: {{BodyFont}};
 }
 
 .badge {
@@ -48,11 +51,7 @@ p {
 
 .main-container {
 	display: inline-block;
-	font-family: "Nunito", sans-serif;
 	font-weight: 600;
-	text-shadow: 3px 3px 2px #333;
-	-webkit-text-stroke: 0.03em #000;
-	paint-order: stroke fill;
 }
 
 @keyframes appear-ease {

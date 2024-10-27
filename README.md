@@ -6,4 +6,4 @@ A NicoNico-style chat for StreamElements with additional styling and off-screen 
 Additional inspiration borrowed from https://github.com/tekigg/niconico-twitch.
 
 ## Important Notice
-This project is not affiliated with Streamlabs or NicoNico.
+This project is not affiliated with StreamElements or NicoNico.

@@ -1,0 +1,149 @@
+{
+    "MsgFontSize": {
+        "type": "number",
+        "label": "Font size (as a percentage of view height).",
+        "value": 7,
+        "min": 0.1,
+        "max": 100,
+        "step": 0.1,
+
+        "group": "Whole Message Appearance"
+    },
+    "MsgOpactiy": {
+        "type": "number",
+        "label": "Opacity",
+        "value": 1.0,
+        "min": 0.0,
+        "max": 1.0,
+
+        "group": "Whole Message Appearance"
+    },
+    "MinScaleFactor": {
+        "type": "number",
+        "label": "Minimum scale factor for parallax",
+        "value": 0.5,
+        "min": 0.01,
+        "max": 1.0,
+
+        "group": "Whole Message Appearance"
+    },
+    "HiddenAccounts": {
+        "type": "text",
+        "label": "Accounts to hide from chat (comma-separated)",
+        
+        "group": "Whole Message Appearance"
+    },
+    "HideCommands": {
+        "type": "checkbox",
+        "label": "Hide command messages (i.e. that begin with '!')",
+        "value": true,
+
+        "group": "Whole Message Appearance"
+    },
+    "EnableOutline": {
+        "type": "checkbox",
+        "label": "Enable text outline",
+        "value": true,
+
+        "group": "Whole Message Appearance"
+    },
+    "OutlineColor": {
+        "type": "colorpicker",
+        "label": "Color of the text outline",
+        "value": "rgb(0,0,0)",
+
+        "group": "Whole Message Appearance"
+    },
+    "OutlineThickness": {
+        "type": "number",
+        "label": "Thickness of the text outline (in pixels)",
+        "value": 1,
+        "min": 1,
+        "max": 5,
+        "step": 1,
+
+        "group": "Whole Message Appearance"
+    },
+    "EnableTextDropShadow": {
+        "type": "checkbox",
+        "label": "Enable a drop shadow for the text",
+        "value": true,
+
+        "group": "Whole Message Appearance"
+    },
+    "TextShadowColor": {
+        "type": "colorpicker",
+        "label": "Color of the text drop shadow",
+        "value": "rgb(0,0,0)",
+
+        "group": "Whole Message Appearance"
+    },
+
+
+
+    "ParallaxAmount": {
+        "type": "number",
+        "label": "Strength of the parallax effect (0 = no parallax)",
+        "value": 0.6,
+        "min": 0.0,
+
+        "group": "Whole Message Behavior"
+    },
+    "GlobalMsgSpeed": {
+        "type": "number",
+        "label": "Max message speed (pixels per second)",
+        "value": 100,
+        "min": 0.1,
+
+        "group": "Whole Message Behavior"
+    },
+
+
+    "DefaultUsernameColor": {
+        "type": "colorpicker",
+        "label": "Default username color",
+        "value": "rgb(255,255,255)",
+
+        "group": "Username Appearance"
+    },
+    "UsernameFont": {
+        "type": "text",
+        "label": "Font name",
+        "value": "Nunito",
+        
+        "group": "Username Appearance"
+    },
+    "ShowUserBadges": {
+        "type": "checkbox",
+        "label": "Show user badges",
+        "value": true,
+
+        "group": "Username Appearance"
+    },
+
+
+
+    "BodyColor": {
+        "type": "colorpicker",
+        "label": "Font color",
+        "value": "rgb(255,255,255)",
+
+        "group": "Message Body Appearance"
+    },
+    "BodyFont": {
+        "type": "text",
+        "label": "Font name",
+        "value": "Arial",
+
+        "group": "Message Body Appearance"
+    },
+    "BodyCharLimit": {
+        "type": "number",
+        "label": "Maximum character limit",
+        "value": 150,
+        "min": 10,
+        "step": 1,
+
+        "group": "Message Body Appearance"
+    }
+}
