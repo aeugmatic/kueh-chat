@@ -97,8 +97,8 @@ window.addEventListener("onEventReceived", (obj) => {
     setMessageHeight(msgDiv);
 
     // Remove message from DOM to be garbage-collected once off-screen
-    window.addEventListener("animationend", (obj) => {
-        if (obj.animationName === "right-to-left") msgDiv.remove();
+    msgDiv.addEventListener("animationend", (obj) => {
+        if (obj.animationName === "right-to-left") document.getElementById(msgData.msgId).remove();
     });
 });
 
@@ -115,6 +115,7 @@ function createMessageDiv(msgData) {
     
     /* Whole Message */
     let msgDiv = document.createElement("div"); // Create the main message div
+    msgDiv.id = msgData.msgId;                  // Set unique message ID for when it is needed  
     msgDiv.className = "msgDiv";                // Set class
     setAnimation(msgDiv);                       // Set animation + parallax effect
     handleOutline(msgDiv);                      // Handle rendering the outline of the message
