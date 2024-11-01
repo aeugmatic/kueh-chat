@@ -133,7 +133,7 @@
     "BodyFont": {
         "type": "text",
         "label": "Font name",
-        "value": "Arial",
+        "value": "Nunito",
 
         "group": "Message Body Appearance"
     },
