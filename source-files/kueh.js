@@ -1,7 +1,6 @@
 /*
     TODO:
     - ! Allow user to enable (or even specify) easing in / out options (Implement animation for exiting with easing)
-    - ! Random chat colour option instead of default colour?
     - ! Add multiple options for what to do with messages that surpass char limit (e.g. dont show, truncate, etc.)
     - Buffer messages to prevent lag (and potentially overlapping)
     - Use a better parallax algorithm / formula
