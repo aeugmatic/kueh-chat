@@ -7,7 +7,6 @@
     - Use a better parallax algorithm / formula
     - Consider using a more "consistent" method for adding images to text (since badge and emote adding functions do it differently)
     - Flesh out the `escapeText` function / XSS prevention further
-    - Consider potentially deleting message divs once they disappear off-screen, if allowing them to remain affects performance
     - Consider how to deal with text outline a bit more (just leave the colour up to the user?)
     - Better handle message height-handling, because I think some messages still appear off-screen (at the bottom, at least)
     - Possibly implement "deflection" physics? Make messages "deflect" each other within a certain radius so that they don't overlap and are easier to read
@@ -91,10 +90,18 @@ window.addEventListener("onEventReceived", (obj) => {
     let msgDiv = createMessageDiv(msgData);
 
     // Attach the div to the widget
-    document.querySelector(".main-container").appendChild(msgDiv);
+    let mainContainer = document.querySelector(".main-container");
+    mainContainer.appendChild(msgDiv);
 
     // Finally, set the message at a random height (has to be done after div is rendered in the DOM)
     setMessageHeight(msgDiv);
+
+    // Remove / delete message once right-to-left animation finishes to free resources
+    window.addEventListener("animationend", (obj) => {
+        if (obj.animationName === "right-to-left") {
+            msgDiv.remove();
+        }
+    });
 });
 
 
