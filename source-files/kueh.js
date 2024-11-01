@@ -1,7 +1,9 @@
 /*
     TODO:
+    - !!! FIX MESSAGE DELETOR BECAUSE IT DELETES EVERY FUCKING MESSAGE
     - ! Allow user to enable (or even specify) easing in / out options (Implement animation for exiting with easing)
     - ! Add multiple options for what to do with messages that surpass char limit (e.g. dont show, truncate, etc.)
+    - Allow user to change the direction of the shadow with a dial (if such a "selector" is supported by SE?)
     - Buffer messages to prevent lag (and potentially overlapping)
     - Use a better parallax algorithm / formula
     - Consider using a more "consistent" method for adding images to text (since badge and emote adding functions do it differently)
@@ -30,7 +32,7 @@ let parallaxAmount, globalMsgSpeed;
 let usernameColorOption, defaultUsernameColor, showUserBadges;
 
 // Message Body Appearance
-let bodyCharLimit;
+let charLimitDisplayOption, bodyCharLimit;
 
 
 
@@ -66,6 +68,7 @@ window.addEventListener("onWidgetLoad", (obj) => {
 
     // Message Body Appearance
     bodyCharLimit = fieldData.BodyCharLimit;
+    charLimitDisplayOption = fieldData.CharLimitDisplayOption
 });
 
 window.addEventListener("onEventReceived", (obj) => {
@@ -81,8 +84,8 @@ window.addEventListener("onEventReceived", (obj) => {
     // Check if message contains a command prefixed with '!'
     if (hideCommands && msgData.text[0] === "!") return;
 
-    // Don't show message if body surpasses char limit
-    if (msgData.text.length > bodyCharLimit) return;
+    // Don't show message if body surpasses char limit and no display option was chosen
+    if (msgData.text.length > bodyCharLimit && charLimitDisplayOption === "no_display") return;
 
     // Create the message div with all its styles and properties
     let msgDiv = createMessageDiv(msgData);
@@ -92,6 +95,11 @@ window.addEventListener("onEventReceived", (obj) => {
 
     // Finally, set the message at a random height (has to be done after div is rendered in the DOM)
     setMessageHeight(msgDiv);
+
+    // Remove message from DOM to be garbage-collected once off-screen
+    window.addEventListener("animationend", (obj) => {
+        if (obj.animationName === "right-to-left") msgDiv.remove();
+    });
 });
 
 
@@ -183,12 +191,26 @@ function createMsgBodyDiv(msgData) {
     let div = document.createElement("div");
     div.className = "msgBody";
 
-    let msgText = document.createElement("p");
-    msgText.innerHTML = `: ${escapeText(msgData.text)}`;
+    let msgTextElement = document.createElement("p");
 
-    addEmotes(msgText, msgData); // Add emotes to the message body after setting the inner text
+    // Create varaible for storing modifed message body text
+    let msgText = escapeText(msgData.text);
 
-    div.appendChild(msgText); // Append message text with emotes inserted to the div
+    // Only consider display options if char limit surpassed
+    if (msgData.text.length > bodyCharLimit) {
+        if (charLimitDisplayOption === "simple_truncate") {
+            msgText = msgText.slice(0, bodyCharLimit);
+        }
+        else if (charLimitDisplayOption === "ellipsis_truncate") {
+            msgText = msgText.slice(0, bodyCharLimit) + "...";
+        }
+    }
+
+    msgTextElement.innerHTML = `: ${escapeText(msgText)}`;
+
+    addEmotes(msgTextElement, msgData); // Add emotes to the message body after setting the inner text
+
+    div.appendChild(msgTextElement); // Append message text with emotes inserted to the div
 
     return div;
 }

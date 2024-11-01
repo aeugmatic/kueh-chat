@@ -98,6 +98,8 @@
         "group": "Whole Message Behavior"
     },
 
+
+
     "UsernameColorOption": {
         "type": "dropdown",
         "label": "Option for username color",
@@ -144,6 +146,19 @@
         "type": "text",
         "label": "Font name",
         "value": "Arial",
+
+        "group": "Message Body Appearance"
+    },
+    "CharLimitDisplayOption": {
+        "type": "dropdown",
+        "label": "Display option for messages beyond character limit",
+        "options": {
+            "display": "Display entire message (ignore limit)",
+            "no_display": "Don't display message",
+            "simple_truncate": "Truncate message",
+            "ellipsis_truncate": "Truncate message and add ellipsis"
+        },
+        "value": "no_display",
 
         "group": "Message Body Appearance"
     },
