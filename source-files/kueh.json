@@ -98,7 +98,17 @@
         "group": "Whole Message Behavior"
     },
 
+    "UsernameColorOption": {
+        "type": "dropdown",
+        "label": "Option for username color",
+        "options": {
+            "twitch": "Random color provided by Twitch",
+            "default_color": "A specific default username color"
+        },
+        "value": "twitch",
 
+        "group": "Username Appearance"
+    },
     "DefaultUsernameColor": {
         "type": "colorpicker",
         "label": "Default username color",

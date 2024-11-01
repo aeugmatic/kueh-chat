@@ -1,17 +1,14 @@
 /*
     TODO:
-    - ! Allow user to enable (or even specify) easing in / out options
+    - ! Allow user to enable (or even specify) easing in / out options (Implement animation for exiting with easing)
     - ! Random chat colour option instead of default colour?
     - ! Add multiple options for what to do with messages that surpass char limit (e.g. dont show, truncate, etc.)
     - Buffer messages to prevent lag (and potentially overlapping)
     - Use a better parallax algorithm / formula
     - Consider using a more "consistent" method for adding images to text (since badge and emote adding functions do it differently)
     - Flesh out the `escapeText` function / XSS prevention further
-    - Consider potentially deleting message divs once they disappear off-screen, if allowing them to remain affects performance
     - Consider how to deal with text outline a bit more (just leave the colour up to the user?)
-    - Better handle message height-handling, because I think some messages still appear off-screen (at the bottom, at least)
     - Possibly implement "deflection" physics? Make messages "deflect" each other within a certain radius so that they don't overlap and are easier to read
-    - Make messages invisible after animations end to ensure they dont show up, even if offscreen distance is too short
     - Modify the easing animations to account for different speeds so that it is more fluid
     - Can the default username colour just be set in the CSS, and the JS just overrides it if a custom colour was set instead?
 */
@@ -31,7 +28,7 @@ let minScaleFactor, hiddenAccs, hideCommands, enableOutline, outlineColor, outli
 let parallaxAmount, globalMsgSpeed;
 
 // Username Appearance
-let defaultUsernameColor, showUserBadges;
+let usernameColorOption, defaultUsernameColor, showUserBadges;
 
 // Message Body Appearance
 let bodyCharLimit;
@@ -64,6 +61,7 @@ window.addEventListener("onWidgetLoad", (obj) => {
     globalMsgSpeed = fieldData.GlobalMsgSpeed;
 
     // Username Appearance
+    usernameColorOption = fieldData.UsernameColorOption;
     defaultUsernameColor = fieldData.DefaultUsernameColor;
     showUserBadges = fieldData.ShowUserBadges;
 
@@ -134,8 +132,44 @@ function createUsernameDiv(msgData) {
     // Add badges the user has
     if (showUserBadges) { addUserBadges(div, msgData); } 
 
-    // Check if user color has been set - if display color is `undefined` then first non-falsy value is returned
-    div.style.color = msgData.displayColor ?? defaultUsernameColor;
+    // Holds color value to assign to style.color
+    let setColor = "";
+    
+    // If username color already set in chat, then just set it to that 
+    if (msgData.displayColor) {
+        setColor = msgData.displayColor;
+    }
+    // If selected, choose a random default Twitch color
+    else if (usernameColorOption === "twitch") {
+        // Create object to store the default Twitch colors
+        const twitchColors = {
+            Red: "#FF0000",
+            Blue: "#0000FF",
+            Green: "#00FF00",
+            FireBrick: "#B22222",
+            Coral: "#FF7F50",
+            YellowGreen: "#9ACD32",
+            OrangeRed: "#FF4500",
+            SeaGreen: "#2E8B57",
+            GoldenRod: "#DAA520",
+            Chocolate: "#D2691E",
+            CadetBlue: "#5F9EA0",
+            DodgerBlue: "#1E90FF",
+            HotPink: "#FF69B4",
+            BlueViolet: "#8A2BE2",
+            SpringGreen: "#00FF7F"
+        };
+
+        // Select random color from object and then set that as the username colour
+        const colorKeys = Object.keys(twitchColors);
+        setColor = colorKeys[ Math.round(boundedRandom(0, colorKeys.length)) ];
+    }
+    // If selected, set the username color to the default one
+    else if (usernameColorOption === "default_color") {
+        // Check for certain if user color has been set - if display color is `undefined` then first non-falsy value is returned
+        setColor = defaultUsernameColor;
+    }
+    div.style.color = setColor;
 
     // Append username text to div
     let username = document.createElement("p");
@@ -161,7 +195,7 @@ function createMsgBodyDiv(msgData) {
 }
 
 function setAnimation(div) {
-    const size = randomSize(minScaleFactor, 1);          // Generate random size value for parallax effect
+    const size = boundedRandom(minScaleFactor, 1);          // Generate random size value for parallax effect
     const time = calcParallaxTime(size, parallaxAmount); // Adjust time (i.e speed) value according to random size value
 
     div.style.fontSize = `${size}em`;
@@ -208,7 +242,7 @@ function escapeText(text) {
       .replace(/'/g, "&#039;");
 }
 
-function randomSize(minSize, maxSize) {
+function boundedRandom(minSize, maxSize) {
     return Math.random() * (maxSize - minSize) + minSize;
 }
 
