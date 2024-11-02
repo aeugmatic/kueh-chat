@@ -1,17 +1,14 @@
 /*
     TODO:
-    - !!! FIX MESSAGE DELETOR BECAUSE IT DELETES EVERY FUCKING MESSAGE
     - ! Allow user to enable (or even specify) easing in / out options (Implement animation for exiting with easing)
     - ! Add multiple options for what to do with messages that surpass char limit (e.g. dont show, truncate, etc.)
-    - Allow user to change the direction of the shadow with a dial (if such a "selector" is supported by SE?)
-    - Buffer messages to prevent lag (and potentially overlapping)
+    - ! Add JSDoc comments to each non-anonymous function
+    - ! Buffer messages to prevent lag (and potentially overlapping) (allow user to choose how many messages to display on screen at a time?)
     - Use a better parallax algorithm / formula
     - Consider using a more "consistent" method for adding images to text (since badge and emote adding functions do it differently)
-    - Flesh out the `escapeText` function / XSS prevention further
     - Consider how to deal with text outline a bit more (just leave the colour up to the user?)
     - Possibly implement "deflection" physics? Make messages "deflect" each other within a certain radius so that they don't overlap and are easier to read
     - Modify the easing animations to account for different speeds so that it is more fluid
-    - Can the default username colour just be set in the CSS, and the JS just overrides it if a custom colour was set instead?
 */
 
 
@@ -23,7 +20,7 @@
 */
 
 // Whole Message Appearance
-let minScaleFactor, hiddenAccs, hideCommands, enableOutline, outlineColor, outlineThickness, enableTextDropShadow, textShadowColor;
+let minScaleFactor, hiddenAccs, hideCommands, enableOutline, outlineColor, outlineThickness, enableTextDropShadow, textShadowColor, textShadowAngle;
 
 // Whole Message Behaviour
 let parallaxAmount, globalMsgSpeed;
@@ -56,6 +53,7 @@ window.addEventListener("onWidgetLoad", (obj) => {
     outlineThickness = fieldData.OutlineThickness
     enableTextDropShadow = fieldData.EnableTextDropShadow;
     textShadowColor = fieldData.TextShadowColor;
+    textShadowAngle = fieldData.TextShadowAngle;
 
     // Whole Message Behaviour
     parallaxAmount = fieldData.ParallaxAmount;
@@ -206,18 +204,16 @@ function createMsgBodyDiv(msgData) {
             msgText = msgText.slice(0, bodyCharLimit) + "...";
         }
     }
-
     msgTextElement.innerHTML = `: ${escapeText(msgText)}`;
 
     addEmotes(msgTextElement, msgData); // Add emotes to the message body after setting the inner text
-
-    div.appendChild(msgTextElement); // Append message text with emotes inserted to the div
+    div.appendChild(msgTextElement);    // Append message text with emotes inserted to the div
 
     return div;
 }
 
 function setAnimation(div) {
-    const size = boundedRandom(minScaleFactor, 1);          // Generate random size value for parallax effect
+    const size = boundedRandom(minScaleFactor, 1);       // Generate random size value for parallax effect
     const time = calcParallaxTime(size, parallaxAmount); // Adjust time (i.e speed) value according to random size value
 
     div.style.fontSize = `${size}em`;
@@ -261,7 +257,8 @@ function escapeText(text) {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+      .replace(/'/g, "&#039;")
+      .replace(/`/g, "&#96;");
 }
 
 function boundedRandom(minSize, maxSize) {
@@ -300,9 +297,18 @@ function handleShadow() {
 }
 
 function calcParallaxTime(size, amount) {
-    return calcMsgTravelTime() / Math.pow(size, minScaleFactor);
-}
+    // Treat parallax amount value as speed offset
+    const speedOffset = amount;
 
-function calcMsgTravelTime() {
-    return window.innerWidth / globalMsgSpeed;
+    /* 
+        Explanation of parallax calculation:
+        -> globalMsgSpeed * speedFactor         [final speed is relative to global speed * a size-dependent factor value]
+        -> speedFactor = (1 - size) * amount    [the closer the size is to 100% / 1, the lesser the effect; the higher the amount, the more the effect]
+    */ 
+    const adjustedSpeed = globalMsgSpeed * (1 - 
+        ((1 - size) * amount) // The smaller the size, the greater the variation - and hence, the smaller the total speed
+    );
+
+    // Time (s) = Distance (px) / Speed (px/s)
+    return window.innerWidth / adjustedSpeed;
 }
