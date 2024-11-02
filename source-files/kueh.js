@@ -2,9 +2,7 @@
     TODO:
     - ! Allow user to enable (or even specify) easing in / out options (Implement animation for exiting with easing)
     - ! Add multiple options for what to do with messages that surpass char limit (e.g. dont show, truncate, etc.)
-    - ! Add JSDoc comments to each non-anonymous function
     - ! Buffer messages to prevent lag (and potentially overlapping) (allow user to choose how many messages to display on screen at a time?)
-    - Use a better parallax algorithm / formula
     - Consider using a more "consistent" method for adding images to text (since badge and emote adding functions do it differently)
     - Consider how to deal with text outline a bit more (just leave the colour up to the user?)
     - Possibly implement "deflection" physics? Make messages "deflect" each other within a certain radius so that they don't overlap and are easier to read
@@ -108,7 +106,12 @@ window.addEventListener("onEventReceived", (obj) => {
     ============================
 */
 
-/* TODO: MAKE JSDOC */
+/**
+ * Creates a div to represent the entire message (username + message body).
+ * 
+ * @param {object} msgData an object holding the message data from the StreamElements API.
+ * @returns the entire message div object.
+ */
 function createMessageDiv(msgData) {
     
     /* Whole Message */
@@ -130,6 +133,12 @@ function createMessageDiv(msgData) {
     return msgDiv;                   // Return the entire message div
 }
 
+/**
+ * Creates a div to represent the username,
+ * 
+ * @param {object} msgData an object holding the message data from the StreamElements API.
+ * @returns the username div object.
+ */
 function createUsernameDiv(msgData) {
     // Create div object
     let div = document.createElement("div");
@@ -185,6 +194,12 @@ function createUsernameDiv(msgData) {
     return div;
 }
 
+/**
+ * Creates a div to represent the message body text.
+ * 
+ * @param {object} msgData an object holding the message data from the StreamElements API.
+ * @returns the message body div object.
+ */
 function createMsgBodyDiv(msgData) {
     // Create div object
     let div = document.createElement("div");
@@ -212,21 +227,38 @@ function createMsgBodyDiv(msgData) {
     return div;
 }
 
-function setAnimation(div) {
+/**
+ * Sets the font size and animation stylings for the whole chat message.
+ * 
+ * @param {object} msgDiv object that represents the entire message div.
+ */
+function setAnimation(msgDiv) {
     const size = boundedRandom(minScaleFactor, 1);       // Generate random size value for parallax effect
     const time = calcParallaxTime(size, parallaxAmount); // Adjust time (i.e speed) value according to random size value
 
-    div.style.fontSize = `${size}em`;
-	div.style.animation = `appear-ease 0.5s cubic-bezier(.24,.59,.33,.67) forwards, right-to-left ${time}s linear 0.5s forwards`;
+    msgDiv.style.fontSize = `${size}em`;
+	msgDiv.style.animation = `appear-ease 0.5s cubic-bezier(.24,.59,.33,.67) forwards, right-to-left ${time}s linear 0.5s forwards`;
 }
 
-function setMessageHeight(div) {
-    const maxHeight = window.innerHeight - div.offsetHeight; // Ensure it doesn't go out off screen at the bottom (space added to top of text)
+/**
+ * Sets the whole message height to a random value (adjusted to fit within the screen).
+ * 
+ * @param {object} msgDiv object that represents the entire message div.
+ */
+function setMessageHeight(msgDiv) {
+    const maxHeight = window.innerHeight - msgDiv.offsetHeight; // Ensure it doesn't go out off screen at the bottom (space added to top of text)
     const randomHeight = Math.random() * maxHeight;
-    div.style.top = `${randomHeight}px`;
+    msgDiv.style.top = `${randomHeight}px`;
 }
 
-function addUserBadges(div, msgData) {
+/**
+ * Adds any user badges to the username div.
+ * 
+ * @param {object} usernameDiv object that represents the username div.
+ * @param {object} msgData an object holding the message data from the StreamElements API.
+ * @returns nothing (if there's no badges to add)
+ */
+function addUserBadges(usernameDiv, msgData) {
     // Check if there exist badges to add
     if (!msgData.badges) return;
 
@@ -236,21 +268,34 @@ function addUserBadges(div, msgData) {
         badgeImg.src = badge.url;
 		badgeImg.className = "badge";
 
-        div.appendChild(badgeImg);
+        usernameDiv.appendChild(badgeImg);
     }
 }
 
-function addEmotes(msgText, msgData) {
+/**
+ * Adds emote images to the message body text.
+ * 
+ * @param {*} msgTextElement HTML element representing the message body text. 
+ * @param {*} msgData an object holding the message data from the StreamElements API.
+ * @returns nothing (if there's no emotes to add).
+ */
+function addEmotes(msgTextElement, msgData) {
     // Check if there exist emotes to add
     if (!msgData.emotes) return;
 
     // Create `img` element string for each emote, and replace each instance of emote text with it
     for (let emote of msgData.emotes) {
         let emoteImg = `<img class="emote" src="${emote.urls["4"]}" />`;
-        msgText.innerHTML = msgText.innerHTML.replace(emote.name, emoteImg);
+        msgTextElement.innerHTML = msgTextElement.innerHTML.replace(emote.name, emoteImg);
     }
 }
 
+/**
+ * Escapes / sanitises the message body text to prevent XSS attacks.
+ * 
+ * @param {string} text text to escape / sanitise.
+ * @returns the escaped text.
+ */
 function escapeText(text) {
     return text
       .replace(/&/g, "&amp;")
@@ -261,13 +306,30 @@ function escapeText(text) {
       .replace(/`/g, "&#96;");
 }
 
+/**
+ * Generates a random real value between a lower and upper bound value.
+ * 
+ * @param {number} minSize lower bound.
+ * @param {number} maxSize upper bound.
+ * @returns random real value.
+ */
 function boundedRandom(minSize, maxSize) {
     return Math.random() * (maxSize - minSize) + minSize;
 }
 
-function handleOutline(div) {
+/**
+ * Handles the outline and drop shadow for the entire message.
+ * 
+ * @param {object} msgDiv object that represents the entire message div.
+ */
+function handleOutline(msgDiv) {
     // Initialise to include "actual" drop shadow for the text
-    let shadow = handleShadow();
+    let shadow = "";
+
+    // Set the drop shadow if enabled
+    if (enableTextDropShadow) {
+        shadow =  `3px 3px 3px ${textShadowColor}`
+    }
 
     // If text outline enabled, add "outline" shadow
     if (enableOutline) {
@@ -286,19 +348,18 @@ function handleOutline(div) {
         -${outlineThickness}px  0                     0 ${outlineColor}`;
     }
 
-    div.style.textShadow = shadow;
+    msgDiv.style.textShadow = shadow;
 }
 
-function handleShadow() {
-    if (enableTextDropShadow) {
-        return `3px 3px 3px ${textShadowColor}`
-    }
-    return "";
-}
-
+/**
+ * Handles the parallax calculations for a message.
+ * 
+ * @param {number} size the size of the message (relative to the font size).
+ * @param {number} amount the parallax amount / strength.
+ * @returns the time (in seconds) for the animation to complete.
+ */
 function calcParallaxTime(size, amount) {
     // Treat parallax amount value as speed offset
-    const speedOffset = amount;
 
     /* 
         Explanation of parallax calculation:
