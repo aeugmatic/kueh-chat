@@ -1,8 +1,10 @@
 /*
     TODO:
+    - !!! (BEFORE RELEASE) Buffer messages to prevent lag (and potentially overlapping) (allow user to choose how many messages to display on screen at a time?)
+
     - ! Allow user to enable (or even specify) easing in / out options (Implement animation for exiting with easing)
     - ! Add multiple options for what to do with messages that surpass char limit (e.g. dont show, truncate, etc.)
-    - ! Buffer messages to prevent lag (and potentially overlapping) (allow user to choose how many messages to display on screen at a time?)
+    - Additional option to link message buffer to number of messages / message size? e.g. if emotes are spammed in a raid then they can fill the screen
     - Consider using a more "consistent" method for adding images to text (since badge and emote adding functions do it differently)
     - Consider how to deal with text outline a bit more (just leave the colour up to the user?)
     - Possibly implement "deflection" physics? Make messages "deflect" each other within a certain radius so that they don't overlap and are easier to read
@@ -12,16 +14,20 @@
 
 
 /*  
-    ==========================================================
-        Declare variables to hold relevant JSON field data
-    ==========================================================
+    ========================
+        GLOBAL VARIABLES
+    ========================
+*/
+
+/*
+    JSON Field Data
 */
 
 // Whole Message Appearance
 let minScaleFactor, hiddenAccs, hideCommands, enableOutline, outlineColor, outlineThickness, enableTextDropShadow, textShadowColor, textShadowAngle;
 
 // Whole Message Behaviour
-let parallaxAmount, globalMsgSpeed;
+let parallaxAmount, globalMsgSpeed, enableMsgBuffer, preBufferMsgLimit;
 
 // Username Appearance
 let usernameColorOption, defaultUsernameColor, showUserBadges;
@@ -29,11 +35,18 @@ let usernameColorOption, defaultUsernameColor, showUserBadges;
 // Message Body Appearance
 let charLimitDisplayOption, bodyCharLimit;
 
+/* 
+    Message Buffer Values
+*/
+
+const msgQueue = [];  // Message buffer queue
+let onscreenMsgs = 0; // Number of onscreen messages
+
 
 
 /*  
     ==================
-        Event code
+        EVENT CODE
     ==================
 */  
 
@@ -56,6 +69,8 @@ window.addEventListener("onWidgetLoad", (obj) => {
     // Whole Message Behaviour
     parallaxAmount = fieldData.ParallaxAmount;
     globalMsgSpeed = fieldData.GlobalMsgSpeed;
+    enableMsgBuffer = fieldData.EnableMsgBuffer;
+    preBufferMsgLimit = fieldData.PreBufferMsgLimit;
 
     // Username Appearance
     usernameColorOption = fieldData.UsernameColorOption;
@@ -67,44 +82,51 @@ window.addEventListener("onWidgetLoad", (obj) => {
     charLimitDisplayOption = fieldData.CharLimitDisplayOption
 });
 
-window.addEventListener("onEventReceived", (obj) => {
-    // Check if the object received is a chat message (or if it has the checkable properties at all, hence '?.')
-    if (obj?.detail?.listener?.toUpperCase() !== "MESSAGE") return;
+window.addEventListener("onEventReceived", (msgObj) => {
+    if (msgObj?.detail?.listener?.toUpperCase() !== "MESSAGE") return;
 
-    // Create variable to hold data object for less cumbersome reference
-    const msgData = obj.detail.event.data;
-
-    // Check if message sender is in hidden accounts list (given that the array isn't undefined), don't show their message
-    if (hiddenAccs?.includes(msgData.displayName)) return;
-
-    // Check if message contains a command prefixed with '!'
-    if (hideCommands && msgData.text[0] === "!") return;
-
-    // Don't show message if body surpasses char limit and no display option was chosen
+    // Check if message fulfills necessary criteria to be displayed in the first place
+    const msgData = msgObj.detail.event.data;
+    if (hiddenAccs?.includes(msgData.displayName)) return; 
+    if (hideCommands && msgData.text[0] === "!") return;   
     if (msgData.text.length > bodyCharLimit && charLimitDisplayOption === "no_display") return;
 
-    // Create the message div with all its styles and properties
-    let msgDiv = createMessageDiv(msgData);
-
-    // Attach the div to the widget
-    document.querySelector(".main-container").appendChild(msgDiv);
-
-    // Finally, set the message at a random height (has to be done after div is rendered in the DOM)
-    setMessageHeight(msgDiv);
-
-    // Remove message from DOM to be garbage-collected once off-screen
-    msgDiv.addEventListener("animationend", (obj) => {
-        if (obj.animationName === "right-to-left") document.getElementById(msgData.msgId).remove();
-    });
+    // Handle message queueing
+    if (onscreenMsgs >= preBufferMsgLimit && enableMsgBuffer) {
+        msgQueue.push(msgObj);
+    }
+    else {
+        handleMsgDisplay(msgObj);
+    }
 });
 
 
 
 /* 
     ============================
-        Function definitions
+        FUNCTION DEFINITIONS
     ============================
 */
+
+/* TODO: JAVADOC FOR THIS FUNC */
+function handleMsgDisplay(msgObj) {
+    const msgData = msgObj.detail.event.data;
+    let msgDiv = createMsgDiv(msgData);
+    document.querySelector(".main-container").appendChild(msgDiv);
+    onscreenMsgs++;
+
+    // Must be set after appending because offset height is unknown before div is rendered in DOM
+    setMessageHeight(msgDiv);
+
+    msgDiv.addEventListener("animationend", (msgObj) => {
+        // Remove current message from DOM and dequeue next message waiting to be displayed
+        if (msgObj.animationName === "right-to-left") {
+            document.getElementById(msgData.msgId).remove();
+            onscreenMsgs--;
+            handleMsgDisplay(msgQueue.shift());
+        }
+    });
+}
 
 /**
  * Creates a div to represent the entire message (username + message body).
@@ -112,7 +134,7 @@ window.addEventListener("onEventReceived", (obj) => {
  * @param {object} msgData an object holding the message data from the StreamElements API.
  * @returns the entire message div object.
  */
-function createMessageDiv(msgData) {
+function createMsgDiv(msgData) {
     
     /* Whole Message */
     let msgDiv = document.createElement("div"); // Create the main message div
@@ -122,15 +144,15 @@ function createMessageDiv(msgData) {
     handleOutline(msgDiv);                      // Handle rendering the outline of the message
 
     /* Message Username */
-    let usernameDiv = createUsernameDiv(msgData); // Create the username div
+    let usernameDiv = createUsernameDiv(msgData);
 
     /* Message Body */
-    let msgBodyDiv = createMsgBodyDiv(msgData); // Create the message body div
+    let msgBodyDiv = createMsgBodyDiv(msgData);
 
     /* Putting it All Together */
-    msgDiv.appendChild(usernameDiv); // Append username to whole message
-    msgDiv.appendChild(msgBodyDiv);  // Append message body to whole message
-    return msgDiv;                   // Return the entire message div
+    msgDiv.appendChild(usernameDiv);
+    msgDiv.appendChild(msgBodyDiv);
+    return msgDiv;
 }
 
 /**
@@ -140,21 +162,16 @@ function createMessageDiv(msgData) {
  * @returns the username div object.
  */
 function createUsernameDiv(msgData) {
-    // Create div object
     let div = document.createElement("div");
     div.className = "username";
 
-    // Add badges the user has
     if (showUserBadges) { addUserBadges(div, msgData); } 
 
     // Holds color value to assign to style.color
     let setColor = "";
-    
-    // If username color already set in chat, then just set it to that 
     if (msgData.displayColor) {
         setColor = msgData.displayColor;
     }
-    // If selected, choose a random default Twitch color
     else if (usernameColorOption === "twitch") {
         // Create object to store the default Twitch colors
         const twitchColors = {
@@ -179,9 +196,7 @@ function createUsernameDiv(msgData) {
         const colorKeys = Object.keys(twitchColors);
         setColor = colorKeys[ Math.round(boundedRandom(0, colorKeys.length)) ];
     }
-    // If selected, set the username color to the default one
     else if (usernameColorOption === "default_color") {
-        // Check for certain if user color has been set - if display color is `undefined` then first non-falsy value is returned
         setColor = defaultUsernameColor;
     }
     div.style.color = setColor;
@@ -222,7 +237,7 @@ function createMsgBodyDiv(msgData) {
     msgTextElement.innerHTML = `: ${escapeText(msgText)}`;
 
     addEmotes(msgTextElement, msgData); // Add emotes to the message body after setting the inner text
-    div.appendChild(msgTextElement);    // Append message text with emotes inserted to the div
+    div.appendChild(msgTextElement);
 
     return div;
 }
@@ -233,8 +248,8 @@ function createMsgBodyDiv(msgData) {
  * @param {object} msgDiv object that represents the entire message div.
  */
 function setAnimation(msgDiv) {
-    const size = boundedRandom(minScaleFactor, 1);       // Generate random size value for parallax effect
-    const time = calcParallaxTime(size, parallaxAmount); // Adjust time (i.e speed) value according to random size value
+    const size = boundedRandom(minScaleFactor, 1);
+    const time = calcParallaxTime(size, parallaxAmount);
 
     msgDiv.style.fontSize = `${size}em`;
 	msgDiv.style.animation = `appear-ease 0.5s cubic-bezier(.24,.59,.33,.67) forwards, right-to-left ${time}s linear 0.5s forwards`;
@@ -262,7 +277,6 @@ function addUserBadges(usernameDiv, msgData) {
     // Check if there exist badges to add
     if (!msgData.badges) return;
 
-    // Create `img` element for each user badge and append to beginning of username div
     for (let badge of msgData.badges) {
         let badgeImg = document.createElement("img");
         badgeImg.src = badge.url;
@@ -280,10 +294,8 @@ function addUserBadges(usernameDiv, msgData) {
  * @returns nothing (if there's no emotes to add).
  */
 function addEmotes(msgTextElement, msgData) {
-    // Check if there exist emotes to add
     if (!msgData.emotes) return;
 
-    // Create `img` element string for each emote, and replace each instance of emote text with it
     for (let emote of msgData.emotes) {
         let emoteImg = `<img class="emote" src="${emote.urls["4"]}" />`;
         msgTextElement.innerHTML = msgTextElement.innerHTML.replace(emote.name, emoteImg);
@@ -359,8 +371,6 @@ function handleOutline(msgDiv) {
  * @returns the time (in seconds) for the animation to complete.
  */
 function calcParallaxTime(size, amount) {
-    // Treat parallax amount value as speed offset
-
     /* 
         Explanation of parallax calculation:
         -> globalMsgSpeed * speedFactor         [final speed is relative to global speed * a size-dependent factor value]

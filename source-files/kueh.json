@@ -97,6 +97,22 @@
 
         "group": "Whole Message Behavior"
     },
+    "EnableMsgBuffer": {
+        "type": "checkbox",
+        "label": "Enable message buffering",
+        "value": true,
+
+        "group": "Whole Message Behavior"
+    },
+    "PreBufferMsgLimit": {
+        "type": "number",
+        "label": "Message buffer size",
+        "value": 10,
+        "min": 1,
+        "step": 1,
+
+        "group": "Whole Message Behavior"
+    },
 
 
 
