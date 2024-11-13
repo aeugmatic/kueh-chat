@@ -1,7 +1,5 @@
 /*
     TODO:
-    - !!! (BEFORE RELEASE) Buffer messages to prevent lag (and potentially overlapping) (allow user to choose how many messages to display on screen at a time?)
-
     - ! Allow user to enable (or even specify) easing in / out options (Implement animation for exiting with easing)
     - ! Add multiple options for what to do with messages that surpass char limit (e.g. dont show, truncate, etc.)
     - Additional option to link message buffer to number of messages / message size? e.g. if emotes are spammed in a raid then they can fill the screen
@@ -115,16 +113,16 @@ function handleMsgDisplay(msgObj) {
     document.querySelector(".main-container").appendChild(msgDiv);
     onscreenMsgs++;
 
-    // Must be set after appending because offset height is unknown before div is rendered in DOM
+    // Must be set after appending because offset distances unknown before div is rendered in DOM
     setMessageHeight(msgDiv);
+    const finalAnim = setAnimation(msgDiv);
 
-    msgDiv.addEventListener("animationend", (msgObj) => {
+    // When the final animation (i.e. the one that brings the message offscreen ends)
+    finalAnim.finished.then((msgObj) => {
         // Remove current message from DOM and dequeue next message waiting to be displayed
-        if (msgObj.animationName === "right-to-left") {
-            document.getElementById(msgData.msgId).remove();
-            onscreenMsgs--;
-            handleMsgDisplay(msgQueue.shift());
-        }
+        document.getElementById(msgData.msgId).remove();
+        onscreenMsgs--;
+        handleMsgDisplay(msgQueue.shift());
     });
 }
 
@@ -249,10 +247,53 @@ function createMsgBodyDiv(msgData) {
  */
 function setAnimation(msgDiv) {
     const size = boundedRandom(minScaleFactor, 1);
-    const time = calcParallaxTime(size, parallaxAmount);
-
     msgDiv.style.fontSize = `${size}em`;
-	msgDiv.style.animation = `appear-ease 0.5s cubic-bezier(.24,.59,.33,.67) forwards, right-to-left ${time}s linear 0.5s forwards`;
+
+    
+    setAppearEaseAnimation(msgDiv);
+    return rightToLeftAnimation(msgDiv, size);
+}
+
+/* TODO: JAVADOC FOR THIS FUNC */
+function setAppearEaseAnimation(msgDiv) {
+    const time = 0.5;
+    const startPos = 100; // in vw
+    const endPos = 80;    // in vw
+    const keyframes = [
+        { left: `${startPos}vw` },
+        { left: `${endPos}vw` } 
+    ];
+
+    msgDiv.animate(
+        keyframes, 
+        {
+            duration: time * 1000, // in ms
+            easing: "cubic-bezier(.24,.59,.33,.67)",
+            fill: "forwards"
+        }
+    );
+}
+
+/* TODO: JAVADOC FOR THIS FUNC */
+function rightToLeftAnimation(msgDiv, size) {
+    const time = calcParallaxTime(size, parallaxAmount);
+    const startPos = 80; // in vw
+    const endPos = (-(msgDiv.offsetWidth / window.innerWidth) * 100) - 10; // in vw ("margin of error" offset of 10)
+    const keyframes = [
+        { left: `${startPos}vw` },
+        { left: `${endPos}vw` } 
+    ];
+
+    // Add and then return (as an object) the animation
+    return msgDiv.animate(
+        keyframes, 
+        {
+            duration: time * 1000, // in ms
+            easing: "linear",
+            fill: "forwards",
+            delay: 0.5 * 1000
+        }
+    );
 }
 
 /**
@@ -377,7 +418,7 @@ function calcParallaxTime(size, amount) {
         -> speedFactor = (1 - size) * amount    [the closer the size is to 100% / 1, the lesser the effect; the higher the amount, the more the effect]
     */ 
     const adjustedSpeed = globalMsgSpeed * (1 - 
-        ((1 - size) * amount) // The smaller the size, the greater the variation - and hence, the smaller the total speed
+        ((1 - size) * amount)
     );
 
     // Time (s) = Distance (px) / Speed (px/s)
