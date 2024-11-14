@@ -161,7 +161,7 @@
     "BodyFont": {
         "type": "text",
         "label": "Font name",
-        "value": "Arial",
+        "value": "Nunito",
 
         "group": "Message Body Appearance"
     },
@@ -183,6 +183,7 @@
         "label": "Maximum character limit",
         "value": 150,
         "min": 10,
+        "max": 500,
         "step": 1,
 
         "group": "Message Body Appearance"
