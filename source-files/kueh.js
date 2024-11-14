@@ -1,7 +1,6 @@
 /*
     TODO:
     - ! Allow user to enable (or even specify) easing in / out options (Implement animation for exiting with easing)
-    - ! Add multiple options for what to do with messages that surpass char limit (e.g. dont show, truncate, etc.)
     - Additional option to link message buffer to number of messages / message size? e.g. if emotes are spammed in a raid then they can fill the screen
     - Consider using a more "consistent" method for adding images to text (since badge and emote adding functions do it differently)
     - Consider how to deal with text outline a bit more (just leave the colour up to the user?)
