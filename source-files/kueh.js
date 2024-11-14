@@ -1,45 +1,49 @@
 /*
     TODO:
-    - ! Allow user to enable (or even specify) easing in / out options
-    - ! Random chat colour option instead of default colour?
-    - ! Add multiple options for what to do with messages that surpass char limit (e.g. dont show, truncate, etc.)
-    - Buffer messages to prevent lag (and potentially overlapping)
-    - Use a better parallax algorithm / formula
+    - ! Allow user to enable (or even specify) easing in / out options (Implement animation for exiting with easing)
+    - Additional option to link message buffer to number of messages / message size? e.g. if emotes are spammed in a raid then they can fill the screen
     - Consider using a more "consistent" method for adding images to text (since badge and emote adding functions do it differently)
-    - Flesh out the `escapeText` function / XSS prevention further
     - Consider how to deal with text outline a bit more (just leave the colour up to the user?)
-    - Better handle message height-handling, because I think some messages still appear off-screen (at the bottom, at least)
     - Possibly implement "deflection" physics? Make messages "deflect" each other within a certain radius so that they don't overlap and are easier to read
-    - Make messages invisible after animations end to ensure they dont show up, even if offscreen distance is too short
     - Modify the easing animations to account for different speeds so that it is more fluid
-    - Can the default username colour just be set in the CSS, and the JS just overrides it if a custom colour was set instead?
 */
 
 
 
 /*  
-    ==========================================================
-        Declare variables to hold relevant JSON field data
-    ==========================================================
+    ========================
+        GLOBAL VARIABLES
+    ========================
+*/
+
+/*
+    JSON Field Data
 */
 
 // Whole Message Appearance
-let minScaleFactor, hiddenAccs, hideCommands, enableOutline, outlineColor, outlineThickness, enableTextDropShadow, textShadowColor;
+let minScaleFactor, hiddenAccs, hideCommands, enableOutline, outlineColor, outlineThickness, enableTextDropShadow, textShadowColor, textShadowAngle;
 
 // Whole Message Behaviour
-let parallaxAmount, globalMsgSpeed;
+let parallaxAmount, globalMsgSpeed, enableMsgBuffer, preBufferMsgLimit;
 
 // Username Appearance
-let defaultUsernameColor, showUserBadges;
+let usernameColorOption, defaultUsernameColor, showUserBadges;
 
 // Message Body Appearance
-let bodyCharLimit;
+let charLimitDisplayOption, bodyCharLimit;
+
+/* 
+    Message Buffer Values
+*/
+
+const msgQueue = [];  // Message buffer queue
+let onscreenMsgs = 0; // Number of onscreen messages
 
 
 
 /*  
     ==================
-        Event code
+        EVENT CODE
     ==================
 */  
 
@@ -57,92 +61,142 @@ window.addEventListener("onWidgetLoad", (obj) => {
     outlineThickness = fieldData.OutlineThickness
     enableTextDropShadow = fieldData.EnableTextDropShadow;
     textShadowColor = fieldData.TextShadowColor;
+    textShadowAngle = fieldData.TextShadowAngle;
 
     // Whole Message Behaviour
     parallaxAmount = fieldData.ParallaxAmount;
     globalMsgSpeed = fieldData.GlobalMsgSpeed;
+    enableMsgBuffer = fieldData.EnableMsgBuffer;
+    preBufferMsgLimit = fieldData.PreBufferMsgLimit;
 
     // Username Appearance
+    usernameColorOption = fieldData.UsernameColorOption;
     defaultUsernameColor = fieldData.DefaultUsernameColor;
     showUserBadges = fieldData.ShowUserBadges;
 
     // Message Body Appearance
     bodyCharLimit = fieldData.BodyCharLimit;
+    charLimitDisplayOption = fieldData.CharLimitDisplayOption
 });
 
-window.addEventListener("onEventReceived", (obj) => {
-    // Check if the object received is a chat message (or if it has the checkable properties at all, hence '?.')
-    if (obj?.detail?.listener?.toUpperCase() !== "MESSAGE") return;
+window.addEventListener("onEventReceived", (msgObj) => {
+    if (msgObj?.detail?.listener?.toUpperCase() !== "MESSAGE") return;
 
-    // Create variable to hold data object for less cumbersome reference
-    const msgData = obj.detail.event.data;
+    // Check if message fulfills necessary criteria to be displayed in the first place
+    const msgData = msgObj.detail.event.data;
+    if (hiddenAccs?.includes(msgData.displayName)) return; 
+    if (hideCommands && msgData.text[0] === "!") return;   
+    if (msgData.text.length > bodyCharLimit && charLimitDisplayOption === "no_display") return;
 
-    // Check if message sender is in hidden accounts list (given that the array isn't undefined), don't show their message
-    if (hiddenAccs?.includes(msgData.displayName)) return;
-
-    // Check if message contains a command prefixed with '!'
-    if (hideCommands && msgData.text[0] === "!") return;
-
-    // Don't show message if body surpasses char limit
-    if (msgData.text.length > bodyCharLimit) return;
-
-    // Create the message div with all its styles and properties
-    let msgDiv = createMessageDiv(msgData);
-
-    // Attach the div to the widget
-    let mainContainer = document.querySelector(".main-container");
-    mainContainer.appendChild(msgDiv);
-
-    // Finally, set the message at a random height (has to be done after div is rendered in the DOM)
-    setMessageHeight(msgDiv);
-
-    // Remove / delete message once right-to-left animation finishes to free resources
-    window.addEventListener("animationend", (obj) => {
-        if (obj.animationName === "right-to-left") {
-            msgDiv.remove();
-        }
-    });
+    // Handle message queueing
+    if (onscreenMsgs >= preBufferMsgLimit && enableMsgBuffer) {
+        msgQueue.push(msgObj);
+    }
+    else {
+        handleMsgDisplay(msgObj);
+    }
 });
 
 
 
 /* 
     ============================
-        Function definitions
+        FUNCTION DEFINITIONS
     ============================
 */
 
-/* TODO: MAKE JSDOC */
-function createMessageDiv(msgData) {
+/* TODO: JAVADOC FOR THIS FUNC */
+function handleMsgDisplay(msgObj) {
+    const msgData = msgObj.detail.event.data;
+    let msgDiv = createMsgDiv(msgData);
+    document.querySelector(".main-container").appendChild(msgDiv);
+    onscreenMsgs++;
+
+    // Must be set after appending because offset distances unknown before div is rendered in DOM
+    setMessageHeight(msgDiv);
+    const finalAnim = setAnimation(msgDiv);
+
+    // When the final animation (i.e. the one that brings the message offscreen ends)
+    finalAnim.finished.then((msgObj) => {
+        // Remove current message from DOM and dequeue next message waiting to be displayed
+        document.getElementById(msgData.msgId).remove();
+        onscreenMsgs--;
+        handleMsgDisplay(msgQueue.shift());
+    });
+}
+
+/**
+ * Creates a div to represent the entire message (username + message body).
+ * 
+ * @param {object} msgData an object holding the message data from the StreamElements API.
+ * @returns the entire message div object.
+ */
+function createMsgDiv(msgData) {
     
     /* Whole Message */
     let msgDiv = document.createElement("div"); // Create the main message div
+    msgDiv.id = msgData.msgId;                  // Set unique message ID for when it is needed  
     msgDiv.className = "msgDiv";                // Set class
     setAnimation(msgDiv);                       // Set animation + parallax effect
     handleOutline(msgDiv);                      // Handle rendering the outline of the message
 
     /* Message Username */
-    let usernameDiv = createUsernameDiv(msgData); // Create the username div
+    let usernameDiv = createUsernameDiv(msgData);
 
     /* Message Body */
-    let msgBodyDiv = createMsgBodyDiv(msgData); // Create the message body div
+    let msgBodyDiv = createMsgBodyDiv(msgData);
 
     /* Putting it All Together */
-    msgDiv.appendChild(usernameDiv); // Append username to whole message
-    msgDiv.appendChild(msgBodyDiv);  // Append message body to whole message
-    return msgDiv;                   // Return the entire message div
+    msgDiv.appendChild(usernameDiv);
+    msgDiv.appendChild(msgBodyDiv);
+    return msgDiv;
 }
 
+/**
+ * Creates a div to represent the username,
+ * 
+ * @param {object} msgData an object holding the message data from the StreamElements API.
+ * @returns the username div object.
+ */
 function createUsernameDiv(msgData) {
-    // Create div object
     let div = document.createElement("div");
     div.className = "username";
 
-    // Add badges the user has
     if (showUserBadges) { addUserBadges(div, msgData); } 
 
-    // Check if user color has been set - if display color is `undefined` then first non-falsy value is returned
-    div.style.color = msgData.displayColor ?? defaultUsernameColor;
+    // Holds color value to assign to style.color
+    let setColor = "";
+    if (msgData.displayColor) {
+        setColor = msgData.displayColor;
+    }
+    else if (usernameColorOption === "twitch") {
+        // Create object to store the default Twitch colors
+        const twitchColors = {
+            Red: "#FF0000",
+            Blue: "#0000FF",
+            Green: "#00FF00",
+            FireBrick: "#B22222",
+            Coral: "#FF7F50",
+            YellowGreen: "#9ACD32",
+            OrangeRed: "#FF4500",
+            SeaGreen: "#2E8B57",
+            GoldenRod: "#DAA520",
+            Chocolate: "#D2691E",
+            CadetBlue: "#5F9EA0",
+            DodgerBlue: "#1E90FF",
+            HotPink: "#FF69B4",
+            BlueViolet: "#8A2BE2",
+            SpringGreen: "#00FF7F"
+        };
+
+        // Select random color from object and then set that as the username colour
+        const colorKeys = Object.keys(twitchColors);
+        setColor = colorKeys[ Math.round(boundedRandom(0, colorKeys.length)) ];
+    }
+    else if (usernameColorOption === "default_color") {
+        setColor = defaultUsernameColor;
+    }
+    div.style.color = setColor;
 
     // Append username text to div
     let username = document.createElement("p");
@@ -152,76 +206,182 @@ function createUsernameDiv(msgData) {
     return div;
 }
 
+/**
+ * Creates a div to represent the message body text.
+ * 
+ * @param {object} msgData an object holding the message data from the StreamElements API.
+ * @returns the message body div object.
+ */
 function createMsgBodyDiv(msgData) {
     // Create div object
     let div = document.createElement("div");
     div.className = "msgBody";
 
-    let msgText = document.createElement("p");
-    msgText.innerHTML = `: ${escapeText(msgData.text)}`;
+    let msgTextElement = document.createElement("p");
 
-    addEmotes(msgText, msgData); // Add emotes to the message body after setting the inner text
+    // Create varaible for storing modifed message body text
+    let msgText = escapeText(msgData.text);
 
-    div.appendChild(msgText); // Append message text with emotes inserted to the div
+    // Only consider display options if char limit surpassed
+    if (msgData.text.length > bodyCharLimit) {
+        if (charLimitDisplayOption === "simple_truncate") {
+            msgText = msgText.slice(0, bodyCharLimit);
+        }
+        else if (charLimitDisplayOption === "ellipsis_truncate") {
+            msgText = msgText.slice(0, bodyCharLimit) + "...";
+        }
+    }
+    msgTextElement.innerHTML = `: ${escapeText(msgText)}`;
+
+    addEmotes(msgTextElement, msgData); // Add emotes to the message body after setting the inner text
+    div.appendChild(msgTextElement);
 
     return div;
 }
 
-function setAnimation(div) {
-    const size = randomSize(minScaleFactor, 1);          // Generate random size value for parallax effect
-    const time = calcParallaxTime(size, parallaxAmount); // Adjust time (i.e speed) value according to random size value
+/**
+ * Sets the font size and animation stylings for the whole chat message.
+ * 
+ * @param {object} msgDiv object that represents the entire message div.
+ */
+function setAnimation(msgDiv) {
+    const size = boundedRandom(minScaleFactor, 1);
+    msgDiv.style.fontSize = `${size}em`;
 
-    div.style.fontSize = `${size}em`;
-	div.style.animation = `appear-ease 0.5s cubic-bezier(.24,.59,.33,.67) forwards, right-to-left ${time}s linear 0.5s forwards`;
+    
+    setAppearEaseAnimation(msgDiv);
+    return rightToLeftAnimation(msgDiv, size);
 }
 
-function setMessageHeight(div) {
-    const maxHeight = window.innerHeight - div.offsetHeight; // Ensure it doesn't go out off screen at the bottom (space added to top of text)
+/* TODO: JAVADOC FOR THIS FUNC */
+function setAppearEaseAnimation(msgDiv) {
+    const time = 0.5;
+    const startPos = 100; // in vw
+    const endPos = 80;    // in vw
+    const keyframes = [
+        { left: `${startPos}vw` },
+        { left: `${endPos}vw` } 
+    ];
+
+    msgDiv.animate(
+        keyframes, 
+        {
+            duration: time * 1000, // in ms
+            easing: "cubic-bezier(.24,.59,.33,.67)",
+            fill: "forwards"
+        }
+    );
+}
+
+/* TODO: JAVADOC FOR THIS FUNC */
+function rightToLeftAnimation(msgDiv, size) {
+    const time = calcParallaxTime(size, parallaxAmount);
+    const startPos = 80; // in vw
+    const endPos = (-(msgDiv.offsetWidth / window.innerWidth) * 100) - 10; // in vw ("margin of error" offset of 10)
+    const keyframes = [
+        { left: `${startPos}vw` },
+        { left: `${endPos}vw` } 
+    ];
+
+    // Add and then return (as an object) the animation
+    return msgDiv.animate(
+        keyframes, 
+        {
+            duration: time * 1000, // in ms
+            easing: "linear",
+            fill: "forwards",
+            delay: 0.5 * 1000
+        }
+    );
+}
+
+/**
+ * Sets the whole message height to a random value (adjusted to fit within the screen).
+ * 
+ * @param {object} msgDiv object that represents the entire message div.
+ */
+function setMessageHeight(msgDiv) {
+    const maxHeight = window.innerHeight - msgDiv.offsetHeight; // Ensure it doesn't go out off screen at the bottom (space added to top of text)
     const randomHeight = Math.random() * maxHeight;
-    div.style.top = `${randomHeight}px`;
+    msgDiv.style.top = `${randomHeight}px`;
 }
 
-function addUserBadges(div, msgData) {
+/**
+ * Adds any user badges to the username div.
+ * 
+ * @param {object} usernameDiv object that represents the username div.
+ * @param {object} msgData an object holding the message data from the StreamElements API.
+ * @returns nothing (if there's no badges to add)
+ */
+function addUserBadges(usernameDiv, msgData) {
     // Check if there exist badges to add
     if (!msgData.badges) return;
 
-    // Create `img` element for each user badge and append to beginning of username div
     for (let badge of msgData.badges) {
         let badgeImg = document.createElement("img");
         badgeImg.src = badge.url;
 		badgeImg.className = "badge";
 
-        div.appendChild(badgeImg);
+        usernameDiv.appendChild(badgeImg);
     }
 }
 
-function addEmotes(msgText, msgData) {
-    // Check if there exist emotes to add
+/**
+ * Adds emote images to the message body text.
+ * 
+ * @param {*} msgTextElement HTML element representing the message body text. 
+ * @param {*} msgData an object holding the message data from the StreamElements API.
+ * @returns nothing (if there's no emotes to add).
+ */
+function addEmotes(msgTextElement, msgData) {
     if (!msgData.emotes) return;
 
-    // Create `img` element string for each emote, and replace each instance of emote text with it
     for (let emote of msgData.emotes) {
         let emoteImg = `<img class="emote" src="${emote.urls["4"]}" />`;
-        msgText.innerHTML = msgText.innerHTML.replace(emote.name, emoteImg);
+        msgTextElement.innerHTML = msgTextElement.innerHTML.replace(emote.name, emoteImg);
     }
 }
 
+/**
+ * Escapes / sanitises the message body text to prevent XSS attacks.
+ * 
+ * @param {string} text text to escape / sanitise.
+ * @returns the escaped text.
+ */
 function escapeText(text) {
     return text
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+      .replace(/'/g, "&#039;")
+      .replace(/`/g, "&#96;");
 }
 
-function randomSize(minSize, maxSize) {
+/**
+ * Generates a random real value between a lower and upper bound value.
+ * 
+ * @param {number} minSize lower bound.
+ * @param {number} maxSize upper bound.
+ * @returns random real value.
+ */
+function boundedRandom(minSize, maxSize) {
     return Math.random() * (maxSize - minSize) + minSize;
 }
 
-function handleOutline(div) {
+/**
+ * Handles the outline and drop shadow for the entire message.
+ * 
+ * @param {object} msgDiv object that represents the entire message div.
+ */
+function handleOutline(msgDiv) {
     // Initialise to include "actual" drop shadow for the text
-    let shadow = handleShadow();
+    let shadow = "";
+
+    // Set the drop shadow if enabled
+    if (enableTextDropShadow) {
+        shadow =  `3px 3px 3px ${textShadowColor}`
+    }
 
     // If text outline enabled, add "outline" shadow
     if (enableOutline) {
@@ -240,20 +400,26 @@ function handleOutline(div) {
         -${outlineThickness}px  0                     0 ${outlineColor}`;
     }
 
-    div.style.textShadow = shadow;
+    msgDiv.style.textShadow = shadow;
 }
 
-function handleShadow() {
-    if (enableTextDropShadow) {
-        return `3px 3px 3px ${textShadowColor}`
-    }
-    return "";
-}
-
+/**
+ * Handles the parallax calculations for a message.
+ * 
+ * @param {number} size the size of the message (relative to the font size).
+ * @param {number} amount the parallax amount / strength.
+ * @returns the time (in seconds) for the animation to complete.
+ */
 function calcParallaxTime(size, amount) {
-    return calcMsgTravelTime() / Math.pow(size, minScaleFactor);
-}
+    /* 
+        Explanation of parallax calculation:
+        -> globalMsgSpeed * speedFactor         [final speed is relative to global speed * a size-dependent factor value]
+        -> speedFactor = (1 - size) * amount    [the closer the size is to 100% / 1, the lesser the effect; the higher the amount, the more the effect]
+    */ 
+    const adjustedSpeed = globalMsgSpeed * (1 - 
+        ((1 - size) * amount)
+    );
 
-function calcMsgTravelTime() {
-    return window.innerWidth / globalMsgSpeed;
+    // Time (s) = Distance (px) / Speed (px/s)
+    return window.innerWidth / adjustedSpeed;
 }
