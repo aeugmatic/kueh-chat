@@ -1,11 +1,13 @@
 /*
     TODO:
+    - !!! Further refine animation calcs and REPLACE MAGIC NUMBERS
     - ! Allow user to enable (or even specify) easing in / out options (Implement animation for exiting with easing)
+    - ! Can the three animations just each be represented by a variable Bezier curve? (i.e.a cubic one where both easings are enabled)
+    - Improve animation code because it seems quite messy atm
     - Additional option to link message buffer to number of messages / message size? e.g. if emotes are spammed in a raid then they can fill the screen
     - Consider using a more "consistent" method for adding images to text (since badge and emote adding functions do it differently)
     - Consider how to deal with text outline a bit more (just leave the colour up to the user?)
     - Possibly implement "deflection" physics? Make messages "deflect" each other within a certain radius so that they don't overlap and are easier to read
-    - Modify the easing animations to account for different speeds so that it is more fluid
 */
 
 
@@ -24,7 +26,7 @@
 let minScaleFactor, hiddenAccs, hideCommands, enableOutline, outlineColor, outlineThickness, enableTextDropShadow, textShadowColor, textShadowAngle;
 
 // Whole Message Behaviour
-let parallaxAmount, globalMsgSpeed, enableMsgBuffer, preBufferMsgLimit;
+let parallaxAmount, globalMsgSpeed, enableMsgBuffer, preBufferMsgLimit, enableAppearanceEasing, enableDisappearanceEasing;
 
 // Username Appearance
 let usernameColorOption, defaultUsernameColor, showUserBadges;
@@ -68,6 +70,8 @@ window.addEventListener("onWidgetLoad", (obj) => {
     globalMsgSpeed = fieldData.GlobalMsgSpeed;
     enableMsgBuffer = fieldData.EnableMsgBuffer;
     preBufferMsgLimit = fieldData.PreBufferMsgLimit;
+    enableAppearanceEasing = fieldData.EnableAppearanceEasing;
+    enableDisappearanceEasing = fieldData.EnableDisappearanceEasing;
 
     // Username Appearance
     usernameColorOption = fieldData.UsernameColorOption;
@@ -91,9 +95,10 @@ window.addEventListener("onEventReceived", (msgObj) => {
     // Handle message queueing
     if (onscreenMsgs >= preBufferMsgLimit && enableMsgBuffer) {
         msgQueue.push(msgObj);
+        console.log(msgQueue);
     }
     else {
-        handleMsgDisplay(msgObj);
+        handleMsgDisplay(msgData);
     }
 });
 
@@ -105,23 +110,24 @@ window.addEventListener("onEventReceived", (msgObj) => {
     ============================
 */
 
-/* TODO: JAVADOC FOR THIS FUNC */
-function handleMsgDisplay(msgObj) {
-    const msgData = msgObj.detail.event.data;
+/* TODO: JSDOC */
+function handleMsgDisplay(msgData) {
     let msgDiv = createMsgDiv(msgData);
     document.querySelector(".main-container").appendChild(msgDiv);
     onscreenMsgs++;
 
     // Must be set after appending because offset distances unknown before div is rendered in DOM
-    setMessageHeight(msgDiv);
+    setMsgHeight(msgDiv);
     const finalAnim = setAnimation(msgDiv);
 
     // When the final animation (i.e. the one that brings the message offscreen ends)
-    finalAnim.finished.then((msgObj) => {
+    finalAnim.finished.then((anim) => {
         // Remove current message from DOM and dequeue next message waiting to be displayed
         document.getElementById(msgData.msgId).remove();
         onscreenMsgs--;
-        handleMsgDisplay(msgQueue.shift());
+
+        // Check if queue even has any divs in it before displaying them
+        if (msgQueue.length) handleMsgDisplay(msgQueue.shift());
     });
 }
 
@@ -137,7 +143,6 @@ function createMsgDiv(msgData) {
     let msgDiv = document.createElement("div"); // Create the main message div
     msgDiv.id = msgData.msgId;                  // Set unique message ID for when it is needed  
     msgDiv.className = "msgDiv";                // Set class
-    setAnimation(msgDiv);                       // Set animation + parallax effect
     handleOutline(msgDiv);                      // Handle rendering the outline of the message
 
     /* Message Username */
@@ -147,6 +152,11 @@ function createMsgDiv(msgData) {
     let msgBodyDiv = createMsgBodyDiv(msgData);
 
     /* Putting it All Together */
+    
+    // Set random font size (mainly for use in parallax effect)
+    const size = boundedRandom(minScaleFactor, 1);
+    msgDiv.style.fontSize = `${size}em`;
+
     msgDiv.appendChild(usernameDiv);
     msgDiv.appendChild(msgBodyDiv);
     return msgDiv;
@@ -231,7 +241,7 @@ function createMsgBodyDiv(msgData) {
             msgText = msgText.slice(0, bodyCharLimit) + "...";
         }
     }
-    msgTextElement.innerHTML = `: ${escapeText(msgText)}`;
+    msgTextElement.innerHTML = `: ${msgText}`;
 
     addEmotes(msgTextElement, msgData); // Add emotes to the message body after setting the inner text
     div.appendChild(msgTextElement);
@@ -239,60 +249,51 @@ function createMsgBodyDiv(msgData) {
     return div;
 }
 
-/**
- * Sets the font size and animation stylings for the whole chat message.
- * 
- * @param {object} msgDiv object that represents the entire message div.
- */
+/* TODO: JSDOC */
 function setAnimation(msgDiv) {
-    const size = boundedRandom(minScaleFactor, 1);
-    msgDiv.style.fontSize = `${size}em`;
+    const size = +msgDiv.style.fontSize.replace("em", "");
 
-    
-    setAppearEaseAnimation(msgDiv);
-    return rightToLeftAnimation(msgDiv, size);
+    // Calculate offscreen distance (in vw) with a "margin of error" of 5
+    const offscreenDist = (-(msgDiv.offsetWidth / window.innerWidth) * 100) - 5;
+
+
+    let animAE, animRL, animDE;
+    if (enableAppearanceEasing && enableDisappearanceEasing) {
+        const RLTime = (0.6 * window.innerWidth) / globalMsgSpeed;
+
+    }
+    else if (enableAppearanceEasing) {
+        const RLTime = (msgDiv.offsetWidth + 0.6*window.innerWidth) / globalMsgSpeed;
+        
+    }
+    else if (enableDisappearanceEasing) {
+        const RLTime = (0.8 * window.innerWidth) / globalMsgSpeed;
+
+    }
+    else {
+        const RLTime = (window.innerWidth + msgDiv.offsetWidth) / globalMsgSpeed;
+        
+    }
 }
 
-/* TODO: JAVADOC FOR THIS FUNC */
-function setAppearEaseAnimation(msgDiv) {
-    const time = 0.5;
-    const startPos = 100; // in vw
-    const endPos = 80;    // in vw
-    const keyframes = [
-        { left: `${startPos}vw` },
-        { left: `${endPos}vw` } 
-    ];
+/* TODO: JSDOC (`steps` is in seconds) */
+function generateKeyframes(steps, time, easingFunc) {
+    const keyframes = [];
 
-    msgDiv.animate(
-        keyframes, 
-        {
-            duration: time * 1000, // in ms
-            easing: "cubic-bezier(.24,.59,.33,.67)",
-            fill: "forwards"
-        }
-    );
+    const timeStep = time / steps;
+    for (let t = 0; t < time; t += timeStep) {
+        keyframes.push({
+            left: easingFunc(t)
+        });
+    }
+
+    return keyframes;
 }
 
-/* TODO: JAVADOC FOR THIS FUNC */
-function rightToLeftAnimation(msgDiv, size) {
-    const time = calcParallaxTime(size, parallaxAmount);
-    const startPos = 80; // in vw
-    const endPos = (-(msgDiv.offsetWidth / window.innerWidth) * 100) - 10; // in vw ("margin of error" offset of 10)
-    const keyframes = [
-        { left: `${startPos}vw` },
-        { left: `${endPos}vw` } 
-    ];
-
-    // Add and then return (as an object) the animation
-    return msgDiv.animate(
-        keyframes, 
-        {
-            duration: time * 1000, // in ms
-            easing: "linear",
-            fill: "forwards",
-            delay: 0.5 * 1000
-        }
-    );
+/* TODO: JSDOC (startPos and endPos are in vw) */
+function AEFunc(t, startPos, endPos) {
+    const c = -Math.log(startPos - endPos);
+    return Math.exp(-t - c) + endPos;
 }
 
 /**
@@ -300,7 +301,7 @@ function rightToLeftAnimation(msgDiv, size) {
  * 
  * @param {object} msgDiv object that represents the entire message div.
  */
-function setMessageHeight(msgDiv) {
+function setMsgHeight(msgDiv) {
     const maxHeight = window.innerHeight - msgDiv.offsetHeight; // Ensure it doesn't go out off screen at the bottom (space added to top of text)
     const randomHeight = Math.random() * maxHeight;
     msgDiv.style.top = `${randomHeight}px`;

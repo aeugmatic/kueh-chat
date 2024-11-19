@@ -9,7 +9,7 @@
 
         "group": "Whole Message Appearance"
     },
-    "MsgOpactiy": {
+    "MsgOpacity": {
         "type": "number",
         "label": "Opacity",
         "value": 1.0,
@@ -113,6 +113,20 @@
 
         "group": "Whole Message Behavior"
     },
+    "EnableAppearanceEasing": {
+        "type": "checkbox",
+        "label": "Enable message appearance easing",
+        "value": true,
+        
+        "group": "Whole Message Behavior"
+    },
+    "EnableDisappearanceEasing": {
+        "type": "checkbox",
+        "label": "Enable message disappearance easing",
+        "value": true,
+        
+        "group": "Whole Message Behavior"
+    },
 
 
 
@@ -161,7 +175,7 @@
     "BodyFont": {
         "type": "text",
         "label": "Font name",
-        "value": "Arial",
+        "value": "Nunito",
 
         "group": "Message Body Appearance"
     },
