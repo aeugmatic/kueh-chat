@@ -91,7 +91,7 @@
     },
     "GlobalMsgSpeed": {
         "type": "number",
-        "label": "Max message speed (vindow width / sec)",
+        "label": "Max message speed (vw / sec)",
         "value": 100,
         "min": 0.1,
 
