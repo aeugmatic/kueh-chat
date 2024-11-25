@@ -254,7 +254,7 @@ function createMsgBodyDiv(msgData) {
 /* TODO: JSDOC */
 function setAnimation(msgDiv) {
     const size = +msgDiv.style.fontSize.replace("em", "");
-    const offscreenDist = (-(msgDiv.offsetWidth / window.innerWidth) * 100) - 5; // Calculate offscreen distance (in vw) with a "margin of error" of 5
+    const offscreenDist = (-(msgDiv.offsetWidth / window.innerWidth) * 100) - 10; // Calculate offscreen distance (in vw) with a "margin of error" of 10
     const msgSpeed = calcParallaxSpeed(size);
 
 
