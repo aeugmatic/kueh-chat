@@ -1,9 +1,9 @@
 /*
     TODO:
-    - !!! Further refine animation calcs and REPLACE MAGIC NUMBERS
-    - ! Allow user to enable (or even specify) easing in / out options (Implement animation for exiting with easing)
-    - ! Can the three animations just each be represented by a variable Bezier curve? (i.e.a cubic one where both easings are enabled)
-    - Improve animation code because it seems quite messy atm
+    - !!! CLEAN UP animation calcs (read up on finished.then()) and REPLACE MAGIC NUMBERS
+    - ! Clean up code in general (e.g. make `let`s into `const`s where needed, and so on)
+    - ! Do JSDOC
+    - ! Consider letting users set animations with `#` or some other symbol? e.g. `#wavy` makes the message become wavy as it travels across the screen
     - Additional option to link message buffer to number of messages / message size? e.g. if emotes are spammed in a raid then they can fill the screen
     - Consider using a more "consistent" method for adding images to text (since badge and emote adding functions do it differently)
     - Consider how to deal with text outline a bit more (just leave the colour up to the user?)
@@ -26,7 +26,7 @@
 let minScaleFactor, hiddenAccs, hideCommands, enableOutline, outlineColor, outlineThickness, enableTextDropShadow, textShadowColor, textShadowAngle;
 
 // Whole Message Behaviour
-let parallaxAmount, globalMsgSpeed, enableMsgBuffer, preBufferMsgLimit, enableAppearanceEasing, enableDisappearanceEasing;
+let parallaxAmount, globalMsgSpeed, enableMsgBuffer, preBufferMsgLimit, easingAcceleration, enableAppearanceEasing, appearanceEaseThresh, enableDisappearanceEasing, disappearanceEaseThresh;
 
 // Username Appearance
 let usernameColorOption, defaultUsernameColor, showUserBadges;
@@ -70,8 +70,11 @@ window.addEventListener("onWidgetLoad", (obj) => {
     globalMsgSpeed = fieldData.GlobalMsgSpeed;
     enableMsgBuffer = fieldData.EnableMsgBuffer;
     preBufferMsgLimit = fieldData.PreBufferMsgLimit;
+    easingAcceleration = fieldData.EasingAcceleration;
     enableAppearanceEasing = fieldData.EnableAppearanceEasing;
+    appearanceEaseThresh = fieldData.AppearanceEaseThresh;
     enableDisappearanceEasing = fieldData.EnableDisappearanceEasing;
+    disappearanceEaseThresh = fieldData.DisappearanceEaseThresh;
 
     // Username Appearance
     usernameColorOption = fieldData.UsernameColorOption;
@@ -95,7 +98,6 @@ window.addEventListener("onEventReceived", (msgObj) => {
     // Handle message queueing
     if (onscreenMsgs >= preBufferMsgLimit && enableMsgBuffer) {
         msgQueue.push(msgObj);
-        console.log(msgQueue);
     }
     else {
         handleMsgDisplay(msgData);
@@ -127,7 +129,7 @@ function handleMsgDisplay(msgData) {
         onscreenMsgs--;
 
         // Check if queue even has any divs in it before displaying them
-        if (msgQueue.length) handleMsgDisplay(msgQueue.shift());
+        if (msgQueue.length) handleMsgDisplay(msgQueue.shift().detail.event.data);
     });
 }
 
@@ -252,48 +254,182 @@ function createMsgBodyDiv(msgData) {
 /* TODO: JSDOC */
 function setAnimation(msgDiv) {
     const size = +msgDiv.style.fontSize.replace("em", "");
+    const offscreenDist = (-(msgDiv.offsetWidth / window.innerWidth) * 100) - 5; // Calculate offscreen distance (in vw) with a "margin of error" of 5
+    const msgSpeed = calcParallaxSpeed(size);
 
-    // Calculate offscreen distance (in vw) with a "margin of error" of 5
-    const offscreenDist = (-(msgDiv.offsetWidth / window.innerWidth) * 100) - 5;
 
-
-    let animAE, animRL, animDE;
+    const easeAnimSteps = 25;
     if (enableAppearanceEasing && enableDisappearanceEasing) {
-        const RLTime = (0.6 * window.innerWidth) / globalMsgSpeed;
+        const AEDuration = calcAEDuration(100, appearanceEaseThresh, msgSpeed);
+        const RLDuration = calcRLDuration(appearanceEaseThresh, disappearanceEaseThresh, msgSpeed);
+        const DEDuration = calcDEDuration(disappearanceEaseThresh, offscreenDist, msgSpeed, AEDuration);
 
+        // Appearance easing
+        const {keyframes: AEKeyframes, animDetails: AEAnimDetails} = createAnimation(
+            AEDuration,    // Duration of this animation
+            0,             // Duration of preceding animation
+            msgSpeed,      // Message speed in vw / s
+            easeAnimSteps, // Number of steps in animation
+            AEFunc         // Easing function to use
+        );
+        msgDiv.animate(AEKeyframes, AEAnimDetails);
+
+        // Right-to-left
+        const {keyframes: RLKeyframes, animDetails: RLAnimDetails} = createAnimation(
+            RLDuration, // Duration of this animation
+            AEDuration, // Duration of preceding animation
+            msgSpeed,   // Message speed in vw / s
+            2,          // Number of steps in animation
+            RLFunc      // Easing function to use
+        );
+        msgDiv.animate(RLKeyframes, RLAnimDetails);
+
+        // Disappearance easing - LAST
+        const {keyframes: DEKeyframes, animDetails: DEAnimDetails} = createAnimation(
+            DEDuration,              // Duration of this animation
+            AEDuration + RLDuration, // Duration of preceding animation
+            msgSpeed,                // Message speed in vw / s
+            easeAnimSteps,           // Number of steps in animation
+            DEFunc                   // Easing function to use
+        );
+        return msgDiv.animate(DEKeyframes, DEAnimDetails);
     }
     else if (enableAppearanceEasing) {
-        const RLTime = (msgDiv.offsetWidth + 0.6*window.innerWidth) / globalMsgSpeed;
-        
+        const AEDuration = calcAEDuration(100, appearanceEaseThresh, msgSpeed);
+        const RLDuration = calcRLDuration(appearanceEaseThresh, offscreenDist, msgSpeed);
+
+        // Appearance easing
+        const {keyframes: AEKeyframes, animDetails: AEAnimDetails} = createAnimation(
+            AEDuration,    // Duration of this animation
+            0,             // Duration of preceding animation
+            msgSpeed,      // Message speed in vw / s
+            easeAnimSteps, // Number of steps in animation
+            AEFunc         // Easing function to use
+        );
+        msgDiv.animate(AEKeyframes, AEAnimDetails);
+
+        // Right-to-left - LAST
+        const {keyframes: RLKeyframes, animDetails: RLAnimDetails} = createAnimation(
+            RLDuration, // Duration of this animation
+            AEDuration, // Duration of preceding animation
+            msgSpeed,   // Message speed in vw / s
+            2,          // Number of steps in animation
+            RLFunc      // Easing function to use
+        );
+        return msgDiv.animate(RLKeyframes, RLAnimDetails);
     }
     else if (enableDisappearanceEasing) {
-        const RLTime = (0.8 * window.innerWidth) / globalMsgSpeed;
+        const RLDuration = calcRLDuration(100, disappearanceEaseThresh, msgSpeed);
+        const DEDuration = calcDEDuration(disappearanceEaseThresh, offscreenDist, msgSpeed, 0);
 
+        // Right-to-left
+        const {keyframes: RLKeyframes, animDetails: RLAnimDetails} = createAnimation(
+            RLDuration, // Duration of this animation
+            0, // Duration of preceding animation
+            msgSpeed,   // Message speed in vw / s
+            2,          // Number of steps in animation
+            RLFunc      // Easing function to use
+        );
+        msgDiv.animate(RLKeyframes, RLAnimDetails);
+
+        // Disappearance easing - LAST
+        const {keyframes: DEKeyframes, animDetails: DEAnimDetails} = createAnimation(
+            DEDuration,    // Duration of this animation
+            RLDuration,    // Duration of preceding animation
+            msgSpeed,      // Message speed in vw / s
+            easeAnimSteps, // Number of steps in animation
+            DEFunc         // Easing function to use
+        );
+        return msgDiv.animate(DEKeyframes, DEAnimDetails);
     }
     else {
-        const RLTime = (window.innerWidth + msgDiv.offsetWidth) / globalMsgSpeed;
-        
+        const RLDuration = calcRLDuration(100, offscreenDist, msgSpeed);
+
+        // Right-to-left - LAST
+        const {keyframes: RLKeyframes, animDetails: RLAnimDetails} = createAnimation(
+            RLDuration, // Duration of this animation
+            0,          // Duration of preceding animation
+            msgSpeed,   // Message speed in vw / s
+            2,          // Number of steps in animation
+            RLFunc      // Easing function to use
+        );
+
+        return msgDiv.animate(RLKeyframes, RLAnimDetails);
     }
 }
 
-/* TODO: JSDOC (`steps` is in seconds) */
-function generateKeyframes(steps, time, easingFunc) {
+/* TODO: JSDOC */
+function createKeyframes(duration, prevDuration, msgSpeed, steps, easingFunc) {
     const keyframes = [];
 
-    const timeStep = time / steps;
-    for (let t = 0; t < time; t += timeStep) {
+    const timeStep = duration / steps;
+    for (let s = 0; s <= steps; s++) {
+        const t = timeStep*s + prevDuration;
+        const leftVal = (prevDuration)? easingFunc(t, msgSpeed, prevDuration) : easingFunc(t, msgSpeed);
+
         keyframes.push({
-            left: easingFunc(t)
+            left: `${leftVal}vw`
         });
     }
 
+    
     return keyframes;
 }
 
-/* TODO: JSDOC (startPos and endPos are in vw) */
-function AEFunc(t, startPos, endPos) {
-    const c = -Math.log(startPos - endPos);
-    return Math.exp(-t - c) + endPos;
+/* TODO: JSDOC */
+function createAnimation(duration, prevDuration, msgSpeed, steps, easingFunc) {
+    return {
+        keyframes: createKeyframes(duration, prevDuration, msgSpeed, steps, easingFunc),
+        animDetails: {
+            duration: duration * 1000,
+            easing: "linear",
+            fill: "forwards",
+            delay: prevDuration * 1000
+        }
+    };
+}
+
+/* TODO: JSDOC */
+function calcRLDuration(s_l, f_l, v) {    
+    return (s_l - f_l) / v;
+}
+
+/* TODO: JSDOC */
+function calcAEDuration(s_a, f_a, v) {
+    const k = easingAcceleration;
+    return (1/k) * Math.log( (k * (s_a - f_a)) / v );
+}
+
+/* TODO: JSDOC */
+function calcDEDuration(s_d, f_d, v, t_1) {
+    const k = easingAcceleration;
+	return (Math.log( (k/v) * (s_d - f_d) + 1 ) - t_1) / k;
+}
+
+/* TODO: JSDOC */
+function AEFunc(t, v) {
+    const s_a = 100,
+          f_a = appearanceEaseThresh,
+          k = easingAcceleration; 
+    const yComp = f_a - (v / k);
+
+    return ( (s_a - f_a) / Math.exp(k*t) ) + yComp;
+}
+
+/* TODO: JSDOC */
+function RLFunc(t, v, t_1) {
+    const f_a = appearanceEaseThresh,
+          yComp = (enableAppearanceEasing)? (v*t_1 + f_a) : 100;
+        
+    return -v*t + yComp;
+}
+
+/* TODO: JSDOC */
+function DEFunc(t, v, t_2) {
+    const s_d = disappearanceEaseThresh,
+          k = easingAcceleration;
+
+    return (v / k) * (1 - Math.exp( k*(t - t_2) )) + s_d;
 }
 
 /**
@@ -404,23 +540,8 @@ function handleOutline(msgDiv) {
     msgDiv.style.textShadow = shadow;
 }
 
-/**
- * Handles the parallax calculations for a message.
- * 
- * @param {number} size the size of the message (relative to the font size).
- * @param {number} amount the parallax amount / strength.
- * @returns the time (in seconds) for the animation to complete.
- */
-function calcParallaxTime(size, amount) {
-    /* 
-        Explanation of parallax calculation:
-        -> globalMsgSpeed * speedFactor         [final speed is relative to global speed * a size-dependent factor value]
-        -> speedFactor = (1 - size) * amount    [the closer the size is to 100% / 1, the lesser the effect; the higher the amount, the more the effect]
-    */ 
-    const adjustedSpeed = globalMsgSpeed * (1 - 
-        ((1 - size) * amount)
-    );
-
-    // Time (s) = Distance (px) / Speed (px/s)
-    return window.innerWidth / adjustedSpeed;
+/* TODO: JSDOC */
+function calcParallaxSpeed(size) {
+    // If parallaxAmount = 0, then size^parallaxAmount = 1, so each message has the same speed
+    return globalMsgSpeed * (Math.pow(size, parallaxAmount));
 }
