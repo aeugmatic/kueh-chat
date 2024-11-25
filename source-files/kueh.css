@@ -19,6 +19,7 @@ p {
 }
 
 .msgDiv {
+	left: 100vw;
 	display: inline-block;
 	position: absolute;
  	white-space: nowrap;
@@ -52,14 +53,4 @@ p {
 .main-container {
 	display: inline-block;
 	font-weight: 600;
-}
-
-@keyframes appear-ease {
-    from { left: 100vw; }
-    to { left: 80vw; }
-}
-
-@keyframes right-to-left {
-    from { left: 80vw; }
-    to {left: -300vw; }
 }

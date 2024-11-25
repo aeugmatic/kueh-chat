@@ -9,7 +9,7 @@
 
         "group": "Whole Message Appearance"
     },
-    "MsgOpactiy": {
+    "MsgOpacity": {
         "type": "number",
         "label": "Opacity",
         "value": 1.0,
@@ -91,7 +91,7 @@
     },
     "GlobalMsgSpeed": {
         "type": "number",
-        "label": "Max message speed (pixels per second)",
+        "label": "Max message speed (vw / sec)",
         "value": 100,
         "min": 0.1,
 
@@ -112,6 +112,50 @@
         "step": 1,
 
         "group": "Whole Message Behavior"
+    },
+
+
+
+    "EasingAcceleration": {
+        "type": "number",
+        "label": "Acceleration for easing animations",
+        "value": 4.5,
+        "min": 1,
+        "max": 10,
+
+        "group": "Easing Animation Options"
+    },
+    "EnableAppearanceEasing": {
+        "type": "checkbox",
+        "label": "Enable message appearance easing",
+        "value": true,
+        
+        "group": "Easing Animation Options"
+    },
+    "AppearanceEaseThresh": {
+        "type": "number",
+        "label": "Appearance easing threshold (vw)",
+        "value": 80,
+        "min": 60,
+        "max": 100,
+
+        "group": "Easing Animation Options"
+    },
+    "EnableDisappearanceEasing": {
+        "type": "checkbox",
+        "label": "Enable message disappearance easing",
+        "value": true,
+        
+        "group": "Easing Animation Options"
+    },
+    "DisappearanceEaseThresh": {
+        "type": "number",
+        "label": "Disappearance easing threshold (vw)",
+        "value": 10,
+        "min": 0,
+        "max": 40,
+
+        "group": "Easing Animation Options"
     },
 
 
