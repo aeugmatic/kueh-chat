@@ -325,7 +325,7 @@ function setAnimation(msgDiv) {
         // Right-to-left
         const {keyframes: RLKeyframes, animDetails: RLAnimDetails} = createAnimation(
             RLDuration, // Duration of this animation
-            0, // Duration of preceding animation
+            0,          // Duration of preceding animation
             msgSpeed,   // Message speed in vw / s
             2,          // Number of steps in animation
             RLFunc      // Easing function to use

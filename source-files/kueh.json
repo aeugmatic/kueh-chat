@@ -113,6 +113,9 @@
 
         "group": "Whole Message Behavior"
     },
+
+
+
     "EasingAcceleration": {
         "type": "number",
         "label": "Acceleration for easing animations",
@@ -120,14 +123,14 @@
         "min": 1,
         "max": 10,
 
-        "group": "Whole Message Behavior"
+        "group": "Easing Animation Options"
     },
     "EnableAppearanceEasing": {
         "type": "checkbox",
         "label": "Enable message appearance easing",
         "value": true,
         
-        "group": "Whole Message Behavior"
+        "group": "Easing Animation Options"
     },
     "AppearanceEaseThresh": {
         "type": "number",
@@ -136,14 +139,14 @@
         "min": 60,
         "max": 100,
 
-        "group": "Whole Message Behavior"
+        "group": "Easing Animation Options"
     },
     "EnableDisappearanceEasing": {
         "type": "checkbox",
         "label": "Enable message disappearance easing",
         "value": true,
         
-        "group": "Whole Message Behavior"
+        "group": "Easing Animation Options"
     },
     "DisappearanceEaseThresh": {
         "type": "number",
@@ -152,7 +155,7 @@
         "min": 0,
         "max": 40,
 
-        "group": "Whole Message Behavior"
+        "group": "Easing Animation Options"
     },
 
 
