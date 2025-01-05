@@ -4,6 +4,7 @@
     - ! Clean up code in general (e.g. make `let`s into `const`s where needed, and so on)
     - ! Do JSDOC
     - ! Consider letting users set animations with `#` or some other symbol? e.g. `#wavy` makes the message become wavy as it travels across the screen
+        (Or let the user specify a keyword / characters themselves so messages with certain words do the animations - e.g. "angry" could trigger a shaking animation on the text)
     - Additional option to link message buffer to number of messages / message size? e.g. if emotes are spammed in a raid then they can fill the screen
     - Consider using a more "consistent" method for adding images to text (since badge and emote adding functions do it differently)
     - Consider how to deal with text outline a bit more (just leave the colour up to the user?)
