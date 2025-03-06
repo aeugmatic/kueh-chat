@@ -1,4 +1,4 @@
-# KuehChat
+# Nico<sup>2</sup>
 
 ## Introduction
 A NicoNico-style chat for StreamElements with additional styling and off-screen easing for messages.
